@@ -13,6 +13,31 @@
 </head>
 <body>
 
+<!-- INTRO SPLASH -->
+<div id="splash">
+  <img class="seal" src="assets/img/logo-seal.png" alt="Kodiak Roofing & Waterproofing — 35th Anniversary">
+  <div class="cap">Adding extraordinary value to buildings and lives</div>
+</div>
+<script>
+  (function () {
+    var splash = document.getElementById('splash');
+    if (!splash) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Play once per browser session so navigating back home doesn't replay it.
+    if (sessionStorage.getItem('kodiakIntro') || reduce) { splash.parentNode.removeChild(splash); return; }
+    document.body.classList.add('splash-lock');
+    var done = function () {
+      splash.classList.add('hide');
+      document.body.classList.remove('splash-lock');
+      sessionStorage.setItem('kodiakIntro', '1');
+      setTimeout(function () { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 1100);
+    };
+    // Hold the seal ~2.6s, then fade to the site. Fallback if 'load' is slow.
+    window.addEventListener('load', function () { setTimeout(done, 2600); });
+    setTimeout(done, 4500);
+  })();
+</script>
+
 <header class="site" id="hdr">
   <div class="wrap">
     <a href="index.html" class="brand"><img src="assets/img/logo.png" alt="Kodiak Roofing & Waterproofing"></a>
