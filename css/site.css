@@ -200,8 +200,19 @@ footer.site .tag{color:var(--text-soft);margin:16px 0;max-width:280px;font-size:
 /* ---------- INTRO SPLASH (home) ---------- */
 #splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
   background:radial-gradient(circle at 50% 50%, #1d1615 0%, #0d0a09 70%);
-  transition:opacity 1s ease, visibility 1s ease;}
+  transition:opacity 1.3s ease, visibility 1.3s ease;}
 #splash.hide{opacity:0;visibility:hidden;}
+/* Site content starts hidden during the intro, then crossfades in as the splash fades out */
+body.intro-active > header.site,
+body.intro-active > section,
+body.intro-active > .strip,
+body.intro-active > .emerg,
+body.intro-active > footer.site{opacity:0;}
+body.intro-fade > header.site,
+body.intro-fade > section,
+body.intro-fade > .strip,
+body.intro-fade > .emerg,
+body.intro-fade > footer.site{opacity:1;transition:opacity 1.3s ease;}
 #splash::before{content:'';position:absolute;top:50%;left:50%;width:360px;height:360px;border-radius:50%;
   background:radial-gradient(circle, rgba(198,161,91,.16), transparent 62%);animation:splashGlow 3s ease-in-out infinite;}
 @keyframes splashGlow{0%,100%{opacity:.5;transform:translate(-50%,-50%) scale(1);}50%{opacity:.9;transform:translate(-50%,-50%) scale(1.08);}}

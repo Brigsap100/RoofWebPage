@@ -25,15 +25,22 @@
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     // Play once per browser session so navigating back home doesn't replay it.
     if (sessionStorage.getItem('kodiakIntro') || reduce) { splash.parentNode.removeChild(splash); return; }
-    document.body.classList.add('splash-lock');
+    document.body.classList.add('splash-lock', 'intro-active');
     var done = function () {
+      if (splash.dataset.done) return; splash.dataset.done = '1';
+      // Crossfade: splash fades out while the site content fades in together.
+      document.body.classList.remove('intro-active');
+      document.body.classList.add('intro-fade');
       splash.classList.add('hide');
       document.body.classList.remove('splash-lock');
       sessionStorage.setItem('kodiakIntro', '1');
-      setTimeout(function () { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 1100);
+      setTimeout(function () {
+        if (splash.parentNode) splash.parentNode.removeChild(splash);
+        document.body.classList.remove('intro-fade');
+      }, 1500);
     };
-    // Hold the seal ~2.6s, then fade to the site. Fallback if 'load' is slow.
-    window.addEventListener('load', function () { setTimeout(done, 2600); });
+    // Hold the seal ~2.4s, then crossfade to the site. Fallback if 'load' is slow.
+    window.addEventListener('load', function () { setTimeout(done, 2400); });
     setTimeout(done, 4500);
   })();
 </script>
