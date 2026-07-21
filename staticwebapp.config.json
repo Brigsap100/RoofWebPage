@@ -1,7 +1,10 @@
 {
+  "platform": {
+    "apiRuntime": "node:20"
+  },
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/css/*", "/js/*", "*.{png,jpg,jpeg,webp,svg,ico}"]
+    "exclude": ["/api/*", "/assets/*", "/css/*", "/js/*", "/crm/*", "/hr/*", "*.{png,jpg,jpeg,webp,svg,ico}"]
   },
   "mimeTypes": {
     ".webp": "image/webp",

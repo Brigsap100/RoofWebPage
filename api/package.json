@@ -1,0 +1,9 @@
+{
+  "name": "kodiak-crm-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kodiak CRM REST API — Azure Functions backed by Azure SQL",
+  "dependencies": {
+    "mssql": "^10.0.2"
+  }
+}

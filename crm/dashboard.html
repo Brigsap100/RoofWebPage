@@ -30,6 +30,7 @@
 <script src="js/data.js"></script>
 <script>
   /* Build the dashboard into #content using window.KODIAK_CRM */
+  KODIAK_CRM.ready.then(function () {
   (function () {
     var D = window.KODIAK_CRM;
     var esc = (window.CRM && window.CRM.esc) || function (s) {
@@ -157,6 +158,8 @@
 
     content.innerHTML = statsHtml + chartsHtml + bottomHtml;
   })();
+  document.querySelector('.topbar .title p').textContent = "Sales overview · " + KODIAK_CRM.source;
+  });
 </script>
 <script src="js/app.js"></script>
 </body>

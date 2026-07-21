@@ -12,7 +12,7 @@
 <script src="js/data.js"></script>
 <script>
 /* build activities */
-(function () {
+KODIAK_CRM.ready.then(function () {
   var D = window.KODIAK_CRM;
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
     return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
@@ -180,8 +180,12 @@
     });
   }
 
-  document.addEventListener("DOMContentLoaded", render);
-})();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", render);
+  } else {
+    render();
+  }
+});
 </script>
 <script src="js/app.js"></script>
 </body></html>

@@ -123,21 +123,43 @@ window.KODIAK_CRM = (function () {
     }));
   }
 
-  // ---- Live API (Data API Builder) with fallback ---------------------
-  const API_BASE = "/data-api/rest";
+  // ---- Live API (Azure SQL via Azure Functions) with fallback --------
+  const API_BASE = "/api/rest";
   async function apiGet(entity) {
     try {
-      const r = await fetch(API_BASE + "/" + entity, { headers:{ "Accept":"application/json" }});
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 4000);
+      const r = await fetch(API_BASE + "/" + entity, { headers:{ "Accept":"application/json" }, signal: ctrl.signal });
+      clearTimeout(t);
       if (!r.ok) throw new Error("api " + r.status);
       const j = await r.json();
       return j.value || j;
-    } catch (e) { return null; } // fall back to local
+    } catch (e) { return null; } // fall back to local dataset
   }
+
+  // Replace an array's contents in place so existing references stay valid.
+  function swap(arr, rows) { if (Array.isArray(rows) && rows.length) arr.splice(0, arr.length, ...rows); }
+
+  let dataSource = "local demo data";
+  // `ready` resolves once live data has been loaded (or the fallback kept).
+  const ready = (async () => {
+    const [acc, opp, prj, est, act] = await Promise.all([
+      apiGet("accounts"), apiGet("opportunities"), apiGet("projects"),
+      apiGet("estimates"), apiGet("activities")
+    ]);
+    if (acc && opp) {
+      swap(accounts, acc); swap(opportunities, opp);
+      swap(projects, prj); swap(estimates, est); swap(activities, act);
+      dataSource = "Azure SQL (live)";
+    }
+    return dataSource;
+  })();
 
   return {
     STAGES, SERVICES, SYSTEMS, reps,
     accounts, opportunities, projects, estimates, activities,
-    fmt, fmtShort, metrics, byStage, apiGet, API_BASE,
+    fmt, fmtShort, metrics, byStage, apiGet, API_BASE, ready,
+    get source() { return dataSource; },
     account: (id) => accounts.find(a=>a.id===id)
   };
 })();

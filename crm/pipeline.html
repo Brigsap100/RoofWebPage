@@ -20,6 +20,7 @@
 </div>
 <script src="js/data.js"></script>
 <script>
+KODIAK_CRM.ready.then(function () {
 (function () {
   var D = window.KODIAK_CRM;
   var esc = (window.CRM && window.CRM.esc) || function (s) {
@@ -115,6 +116,7 @@
     recalc(kb);
   });
 })();
+});
 </script>
 <script src="js/app.js"></script>
 </body></html>
