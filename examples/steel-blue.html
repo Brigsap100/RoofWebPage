@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kodiak Roofing & Waterproofing — Commercial Roofing in CA & NV</title>
+<meta name="description" content="Commercial roofing and waterproofing with over 30 years of experience across California and Nevada. Re-roofing, metal systems, waterproofing, and 24/7 emergency leak repair.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Steel blue accent system */
+    --steel: #3E7CB1;
+    --steel-bright: #5B9BD5;
+    --steel-deep: #285a86;
+
+    /* Dark (hero + footer) */
+    --ink: #0E1620;
+    --ink-2: #16222f;
+    --ink-3: #1e2e3d;
+
+    /* Light body */
+    --paper: #ffffff;
+    --paper-2: #f4f6f9;
+    --paper-3: #e8edf3;
+    --text: #16222f;
+    --text-soft: #4a5b6b;
+    --line: #dbe2ea;
+
+    --maxw: 1180px;
+    --r: 14px;
+    --shadow: 0 18px 50px -20px rgba(14,22,32,.35);
+    --font-head: 'Oswald', 'Arial Narrow', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font-body); color: var(--text); background: var(--paper); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  h1, h2, h3, .display { font-family: var(--font-head); font-weight: 600; line-height: 1.05; letter-spacing: .5px; text-transform: uppercase; }
+
+  .eyebrow { font-family: var(--font-head); text-transform: uppercase; letter-spacing: 3px; font-size: .8rem; font-weight: 600; color: var(--steel); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: .55rem;
+    font-family: var(--font-head); text-transform: uppercase; letter-spacing: 1.5px;
+    font-weight: 600; font-size: .95rem;
+    padding: 15px 30px; border-radius: 8px; cursor: pointer; border: 2px solid transparent;
+    transition: transform .2s ease, background .2s ease, box-shadow .2s ease, color .2s ease;
+  }
+  .btn-primary { background: var(--steel); color: #fff; }
+  .btn-primary:hover { background: var(--steel-bright); transform: translateY(-2px); box-shadow: 0 12px 28px -10px var(--steel); }
+  .btn-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.35); }
+  .btn-ghost:hover { border-color: var(--steel-bright); color: var(--steel-bright); transform: translateY(-2px); }
+  .btn-dark { background: var(--ink); color:#fff; }
+  .btn-dark:hover { background: var(--ink-3); transform: translateY(-2px); }
+
+  /* ---------- NAV ---------- */
+  header.nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    transition: background .3s ease, box-shadow .3s ease, padding .3s ease;
+    padding: 20px 0;
+  }
+  header.nav.scrolled { background: rgba(14,22,32,.92); backdrop-filter: blur(10px); padding: 12px 0; box-shadow: 0 6px 24px -12px rgba(0,0,0,.6); }
+  .nav .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 12px; color: #fff; }
+  .logo .mark { width: 40px; height: 40px; flex: none; }
+  .logo .txt { font-family: var(--font-head); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; line-height: 1; }
+  .logo .txt small { display:block; font-size: .6rem; letter-spacing: 3px; color: var(--steel-bright); font-weight: 500; }
+  .nav-links { display: flex; align-items: center; gap: 30px; }
+  .nav-links a.link { color: #e8edf3; font-weight: 500; font-size: .95rem; position: relative; }
+  .nav-links a.link::after { content:''; position:absolute; left:0; bottom:-6px; width:0; height:2px; background:var(--steel-bright); transition:width .25s ease; }
+  .nav-links a.link:hover::after { width:100%; }
+  .nav-phone { color:#fff; font-family:var(--font-head); font-weight:600; letter-spacing:1px; display:flex; align-items:center; gap:8px; }
+  .nav-phone svg { fill: var(--steel-bright); }
+  .menu-btn { display:none; background:none; border:none; cursor:pointer; padding:8px; }
+  .menu-btn span { display:block; width:26px; height:2px; background:#fff; margin:5px 0; transition:.3s; }
+
+  /* ---------- HERO ---------- */
+  .hero { position: relative; min-height: 100vh; display: flex; align-items: center; color:#fff; overflow: hidden;
+    background:
+      radial-gradient(1200px 600px at 75% 15%, rgba(62,124,177,.35), transparent 60%),
+      linear-gradient(160deg, var(--ink) 0%, var(--ink-2) 55%, #0a1017 100%);
+  }
+  .hero::before {
+    content:''; position:absolute; inset:0; opacity:.5;
+    background-image:
+      linear-gradient(rgba(91,155,213,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,155,213,.06) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+  }
+  /* stylized "roofline" ridge at bottom of hero */
+  .hero .ridge { position:absolute; bottom:-1px; left:0; right:0; z-index:2; display:block; }
+  .hero-inner { position: relative; z-index: 3; padding: 140px 0 120px; max-width: 820px; }
+  .hero h1 { font-size: clamp(2.7rem, 6vw, 5.2rem); font-weight: 700; }
+  .hero h1 .hl { color: var(--steel-bright); }
+  .hero p.lead { font-size: clamp(1.05rem, 2vw, 1.3rem); color:#c4d0dc; margin: 26px 0 38px; max-width: 620px; line-height:1.6; }
+  .hero-cta { display:flex; flex-wrap:wrap; gap:16px; }
+  .hero-badges { display:flex; flex-wrap:wrap; gap: 28px; margin-top: 54px; }
+  .hero-badges .b { display:flex; align-items:center; gap:10px; font-size:.9rem; color:#aebccb; }
+  .hero-badges .b b { color:#fff; font-family:var(--font-head); font-size:1.6rem; font-weight:700; line-height:1; }
+
+  /* ---------- TRUST STRIP ---------- */
+  .trust { background: var(--ink); color:#fff; padding: 0; }
+  .trust .wrap { display:grid; grid-template-columns: repeat(4, 1fr); }
+  .trust .item { padding: 26px 20px; text-align:center; border-left:1px solid rgba(255,255,255,.08); }
+  .trust .item:first-child { border-left:none; }
+  .trust .item strong { display:block; font-family:var(--font-head); color:var(--steel-bright); font-size:1.05rem; letter-spacing:1px; }
+  .trust .item span { font-size:.85rem; color:#9fb0c0; }
+
+  /* ---------- SECTION BASICS ---------- */
+  section { padding: 100px 0; }
+  .sec-head { max-width: 720px; margin-bottom: 54px; }
+  .sec-head h2 { font-size: clamp(2rem, 4vw, 3.1rem); margin: 14px 0 16px; }
+  .sec-head p { color: var(--text-soft); font-size: 1.08rem; }
+  .center { text-align:center; margin-left:auto; margin-right:auto; }
+
+  /* ---------- SERVICES ---------- */
+  .services { background: var(--paper); }
+  .svc-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .svc {
+    background: var(--paper); border:1px solid var(--line); border-radius: var(--r); padding: 32px 28px;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    position:relative; overflow:hidden;
+  }
+  .svc::before { content:''; position:absolute; top:0; left:0; width:0; height:4px; background:var(--steel); transition:width .3s ease; }
+  .svc:hover { transform: translateY(-6px); box-shadow: var(--shadow); border-color: transparent; }
+  .svc:hover::before { width:100%; }
+  .svc .ic { width:52px; height:52px; border-radius:12px; background:var(--paper-3); display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+  .svc .ic svg { width:26px; height:26px; stroke:var(--steel-deep); fill:none; stroke-width:1.8; }
+  .svc h3 { font-size:1.25rem; margin-bottom:10px; letter-spacing:.5px; }
+  .svc p { color:var(--text-soft); font-size:.96rem; }
+
+  /* ---------- HERITAGE BAND ---------- */
+  .heritage { background:
+      radial-gradient(900px 500px at 15% 20%, rgba(62,124,177,.25), transparent 55%),
+      linear-gradient(150deg, var(--ink) 0%, var(--ink-2) 100%);
+    color:#fff; overflow:hidden; }
+  .heritage .wrap { display:grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items:center; }
+  .heritage .big-year { font-family:var(--font-head); font-weight:700; font-size: clamp(6rem, 16vw, 13rem); line-height:.8; color:transparent; -webkit-text-stroke: 2px var(--steel-bright); letter-spacing:2px; }
+  .heritage h2 { font-size: clamp(2rem, 4vw, 3rem); margin:18px 0 18px; }
+  .heritage p { color:#c4d0dc; font-size:1.08rem; margin-bottom:16px; }
+  .stat-row { display:flex; gap:40px; margin-top:30px; flex-wrap:wrap; }
+  .stat-row .s b { font-family:var(--font-head); font-size:2.4rem; color:var(--steel-bright); display:block; line-height:1; }
+  .stat-row .s span { font-size:.85rem; color:#9fb0c0; letter-spacing:1px; text-transform:uppercase; }
+
+  /* ---------- PROJECTS ---------- */
+  .projects { background: var(--paper-2); }
+  .proj-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+  .proj-grid .p0 { grid-column: span 2; }
+  .proj {
+    position:relative; border-radius: var(--r); overflow:hidden; min-height: 260px;
+    display:flex; align-items:flex-end; color:#fff; box-shadow: var(--shadow);
+  }
+  .proj .ph { position:absolute; inset:0; z-index:0; }
+  .proj .grad { position:absolute; inset:0; z-index:1; background:linear-gradient(to top, rgba(9,15,22,.85) 0%, rgba(9,15,22,.15) 60%, transparent 100%); }
+  .proj .meta { position:relative; z-index:2; padding: 28px; }
+  .proj .meta .tag { font-family:var(--font-head); text-transform:uppercase; letter-spacing:2px; font-size:.72rem; color:var(--steel-bright); }
+  .proj .meta h3 { font-size:1.5rem; margin-top:6px; }
+  .proj .meta span { font-size:.9rem; color:#c4d0dc; }
+  .proj .ph-label { position:absolute; z-index:2; top:16px; right:16px; font-size:.65rem; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.25); padding:4px 8px; border-radius:20px; }
+  .proj:hover .ph { transform: scale(1.06); }
+  .proj .ph { transition: transform .6s ease; }
+
+  /* ---------- TESTIMONIALS ---------- */
+  .testi { background: var(--paper); }
+  .testi-grid { display:grid; grid-template-columns: repeat(2,1fr); gap:24px; }
+  .quote { background:var(--paper-2); border-radius:var(--r); padding:40px; border-left:4px solid var(--steel); }
+  .quote .mk { font-family:var(--font-head); font-size:4rem; color:var(--steel); line-height:.4; opacity:.35; }
+  .quote p { font-size:1.15rem; color:var(--text); margin:10px 0 22px; line-height:1.55; }
+  .quote .who { display:flex; align-items:center; gap:14px; }
+  .quote .who .av { width:46px; height:46px; border-radius:50%; background:var(--steel-deep); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-head); font-weight:600; }
+  .quote .who b { display:block; }
+  .quote .who span { font-size:.85rem; color:var(--text-soft); }
+
+  /* ---------- CTA BAND ---------- */
+  .cta-band { background: linear-gradient(120deg, var(--steel-deep), var(--steel)); color:#fff; text-align:center; }
+  .cta-band h2 { font-size: clamp(2rem,4vw,3rem); margin-bottom:16px; }
+  .cta-band p { font-size:1.1rem; color:#eaf2f9; max-width:620px; margin:0 auto 34px; }
+  .cta-band .btn-primary { background:#fff; color:var(--steel-deep); }
+  .cta-band .btn-primary:hover { background:var(--ink); color:#fff; }
+
+  .emergency { background: var(--ink); color:#fff; padding: 34px 0; }
+  .emergency .wrap { display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .emergency .l { display:flex; align-items:center; gap:18px; }
+  .emergency .pulse { width:14px; height:14px; border-radius:50%; background:#ff5a5a; box-shadow:0 0 0 0 rgba(255,90,90,.7); animation:pulse 1.8s infinite; flex:none; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,90,90,.6);} 70%{box-shadow:0 0 0 16px rgba(255,90,90,0);} 100%{box-shadow:0 0 0 0 rgba(255,90,90,0);} }
+  .emergency h3 { font-size:1.4rem; } .emergency span { color:#9fb0c0; font-size:.95rem; }
+
+  /* ---------- FOOTER ---------- */
+  footer { background:#0a1017; color:#c4d0dc; padding: 70px 0 30px; }
+  .foot-grid { display:grid; grid-template-columns: 1.6fr 1fr 1fr 1.2fr; gap:40px; margin-bottom:50px; }
+  footer h4 { font-family:var(--font-head); color:#fff; text-transform:uppercase; letter-spacing:1.5px; font-size:1rem; margin-bottom:18px; }
+  footer ul { list-style:none; } footer ul li { margin-bottom:10px; font-size:.93rem; }
+  footer ul li a:hover { color:var(--steel-bright); }
+  footer .tag { color:#8598a9; font-size:.93rem; margin:16px 0; max-width:260px; }
+  .foot-bottom { border-top:1px solid rgba(255,255,255,.08); padding-top:24px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:.82rem; color:#6f8090; }
+  .lic { font-size:.82rem; color:#8598a9; }
+  .lic b { color:#c4d0dc; }
+
+  /* ---------- reveal animation ---------- */
+  .reveal { opacity:0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.in { opacity:1; transform:none; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 900px) {
+    .nav-links { position:fixed; inset:0 0 0 auto; width:min(78vw,320px); background:var(--ink); flex-direction:column; align-items:flex-start; justify-content:center; padding:40px; gap:22px; transform:translateX(100%); transition:transform .3s ease; z-index:120; }
+    .nav-links.open { transform:none; }
+    .menu-btn { display:block; z-index:130; }
+    .svc-grid { grid-template-columns: 1fr 1fr; }
+    .heritage .wrap { grid-template-columns:1fr; gap:20px; }
+    .trust .wrap { grid-template-columns:1fr 1fr; }
+    .trust .item:nth-child(3) { border-left:none; }
+  }
+  @media (max-width: 620px) {
+    section { padding: 70px 0; }
+    .svc-grid, .proj-grid, .testi-grid { grid-template-columns: 1fr; }
+    .proj-grid .p0 { grid-column: span 1; }
+    .trust .wrap { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a href="#top" class="logo">
+      <svg class="mark" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M24 4 44 20v3L24 9 4 23v-3z" fill="#5B9BD5"/>
+        <path d="M24 14 40 27v17H8V27z" fill="none" stroke="#fff" stroke-width="2.5"/>
+        <path d="M24 14 40 27H8z" fill="#3E7CB1"/>
+      </svg>
+      <span class="txt">Kodiak<small>Roofing & Waterproofing</small></span>
+    </a>
+    <nav class="nav-links" id="navlinks">
+      <a class="link" href="#services">Services</a>
+      <a class="link" href="#projects">Projects</a>
+      <a class="link" href="#about">About</a>
+      <a class="link" href="#contact">Contact</a>
+      <a class="nav-phone" href="tel:9162531900">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1z"/></svg>
+        916.253.1900
+      </a>
+      <a class="btn btn-primary" href="#contact">Request a Quote</a>
+    </nav>
+    <button class="menu-btn" id="menuBtn" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-inner">
+      <div class="eyebrow">Commercial Roofing · California & Nevada</div>
+      <h1>Adding extraordinary value to <span class="hl">buildings</span> and lives.</h1>
+      <p class="lead">Over 30 years protecting the West's most demanding commercial properties — from data centers to hospitals — with roofing and waterproofing built to outlast the elements.</p>
+      <div class="hero-cta">
+        <a href="#contact" class="btn btn-primary">Request a Quote</a>
+        <a href="#services" class="btn btn-ghost">Explore Services</a>
+      </div>
+      <div class="hero-badges">
+        <div class="b"><b>30+</b><span>Years of<br>experience</span></div>
+        <div class="b"><b>24/7</b><span>Emergency<br>leak response</span></div>
+        <div class="b"><b>2</b><span>States<br>served</span></div>
+      </div>
+    </div>
+  </div>
+  <svg class="ridge" viewBox="0 0 1440 90" preserveAspectRatio="none" height="90" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 90 L0 55 L720 5 L1440 55 L1440 90 Z" fill="#ffffff"/>
+  </svg>
+</section>
+
+<!-- TRUST STRIP -->
+<div class="trust">
+  <div class="wrap">
+    <div class="item"><strong>30+ YEARS</strong><span>In business</span></div>
+    <div class="item"><strong>LICENSED</strong><span>CA & NV contractors</span></div>
+    <div class="item"><strong>24/7</strong><span>Emergency repair</span></div>
+    <div class="item"><strong>COMMERCIAL</strong><span>Roofing &amp; waterproofing</span></div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">What we do</div>
+      <h2>Full-service commercial roofing</h2>
+      <p>From new installations to keeping an aging roof watertight, we handle every stage of a commercial roof's life.</p>
+    </div>
+    <div class="svc-grid">
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v9h14v-9"/></svg></div><h3>Commercial Re-Roofing</h3><p>Full tear-off and replacement systems engineered for large-format commercial and industrial buildings.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="M4 10h16M9 6v12"/></svg></div><h3>Commercial Roofing</h3><p>Single-ply, built-up, and modified bitumen systems installed to manufacturer spec with long-term warranties.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3c4 5 6 8 6 11a6 6 0 1 1-12 0c0-3 2-6 6-11z"/></svg></div><h3>Commercial Waterproofing</h3><p>Deck coatings, sealants, and membrane systems that stop water before it reaches the structure.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg></div><h3>Waterproofing Injections</h3><p>Crack and joint injection to seal active leaks in concrete and below-grade assemblies.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4-9 4z"/><path d="M3 8v8l9 4 9-4V8"/></svg></div><h3>Metal Roofing &amp; Panels</h3><p>Standing-seam metal roofing and architectural metal wall panels — durable, modern, and low-maintenance.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/><circle cx="12" cy="12" r="3"/></svg></div><h3>Preventative Maintenance</h3><p>Scheduled inspection and repair programs that extend roof life and protect your warranty.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Roof Life Extension</h3><p>Restoration coatings and repairs that add years of service without the cost of a full replacement.</p></div>
+      <div class="svc reveal"><div class="ic"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div><h3>24/7 Emergency Leak Repair</h3><p>Around-the-clock crews ready to stop active leaks and secure your building, day or night.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- HERITAGE -->
+<section class="heritage" id="about">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="big-year">30</div>
+    </div>
+    <div class="reveal">
+      <div class="eyebrow">Three decades of experience</div>
+      <h2>There's no substitute for experience</h2>
+      <p>With over 30 years in roofing maintenance and repair, we deliver unmatched quality and service. We pair decades of field expertise with up-to-date technology to provide the best experience, savings, and protection possible.</p>
+      <p>Our investment in the goals and careers of our people creates an environment of passion — and it shows on every roof we touch.</p>
+      <div class="stat-row">
+        <div class="s"><b>30+</b><span>Years in business</span></div>
+        <div class="s"><b>2</b><span>States served</span></div>
+        <div class="s"><b>1000s</b><span>Roofs protected</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="projects" id="projects">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Featured work</div>
+      <h2>Trusted on landmark buildings</h2>
+      <p>From tech campuses to hospitals and arenas, owners across California and Nevada rely on Kodiak.</p>
+    </div>
+    <div class="proj-grid">
+      <div class="proj p0 reveal">
+        <div class="ph" style="background:linear-gradient(135deg,#285a86,#5B9BD5);"></div>
+        <div class="ph-label">Photo placeholder</div>
+        <div class="grad"></div>
+        <div class="meta"><div class="tag">Mountain View, CA</div><h3>Google Bay View Campus</h3><span>Large-format commercial roofing on a flagship tech campus.</span></div>
+      </div>
+      <div class="proj reveal">
+        <div class="ph" style="background:linear-gradient(135deg,#1e2e3d,#3E7CB1);"></div>
+        <div class="ph-label">Photo placeholder</div>
+        <div class="grad"></div>
+        <div class="meta"><div class="tag">Sacramento, CA</div><h3>Golden 1 Center</h3><span>Roofing systems for a premier downtown arena.</span></div>
+      </div>
+      <div class="proj reveal">
+        <div class="ph" style="background:linear-gradient(135deg,#2f4a5e,#63a0cf);"></div>
+        <div class="ph-label">Photo placeholder</div>
+        <div class="grad"></div>
+        <div class="meta"><div class="tag">Carson City, NV</div><h3>Carson Tahoe Hospital</h3><span>Reliable waterproofing for a critical care facility.</span></div>
+      </div>
+      <div class="proj reveal">
+        <div class="ph" style="background:linear-gradient(135deg,#22384a,#4f86b3);"></div>
+        <div class="ph-label">Photo placeholder</div>
+        <div class="grad"></div>
+        <div class="meta"><div class="tag">Vacaville, CA</div><h3>Midway Commerce Center</h3><span>Metal roofing and panels for an industrial complex.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <div class="eyebrow">What clients say</div>
+      <h2>Facilities teams trust Kodiak</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="quote reveal">
+        <div class="mk">"</div>
+        <p>I am really satisfied with the overall process. The crew was professional and the results speak for themselves.</p>
+        <div class="who"><div class="av">DL</div><div><b>Dave Lamb</b><span>Facilities Manager, Carson Tahoe Hospital</span></div></div>
+      </div>
+      <div class="quote reveal">
+        <div class="mk">"</div>
+        <p>The service that we get is fantastic. Responsive, thorough, and they stand behind their work every time.</p>
+        <div class="who"><div class="av">JA</div><div><b>James Averill</b><span>Assistant Project Manager, Enso Village</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="cta-band" id="contact">
+  <div class="wrap reveal">
+    <div class="eyebrow" style="color:#eaf2f9;">Get started</div>
+    <h2>Request a quote today</h2>
+    <p>Tell us about your building and we'll put 30+ years of commercial roofing experience to work for you.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="tel:9162531900" class="btn btn-primary">Call 916.253.1900</a>
+      <a href="mailto:info@kodiakroofing.com" class="btn btn-ghost">Email Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- EMERGENCY -->
+<div class="emergency">
+  <div class="wrap">
+    <div class="l">
+      <span class="pulse"></span>
+      <div><h3>Roof leaking right now?</h3><span>Our 24/7 emergency crews are standing by across CA &amp; NV.</span></div>
+    </div>
+    <a href="tel:9162531900" class="btn btn-primary">Get Emergency Help</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a href="#top" class="logo" style="margin-bottom:8px;">
+          <svg class="mark" viewBox="0 0 48 48"><path d="M24 4 44 20v3L24 9 4 23v-3z" fill="#5B9BD5"/><path d="M24 14 40 27v17H8V27z" fill="none" stroke="#fff" stroke-width="2.5"/><path d="M24 14 40 27H8z" fill="#3E7CB1"/></svg>
+          <span class="txt">Kodiak<small>Roofing & Waterproofing</small></span>
+        </a>
+        <p class="tag">Adding extraordinary value to buildings and lives. Commercial roofing &amp; waterproofing across California and Nevada.</p>
+      </div>
+      <div>
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">Commercial Re-Roofing</a></li>
+          <li><a href="#services">Commercial Waterproofing</a></li>
+          <li><a href="#services">Metal Roofing &amp; Panels</a></li>
+          <li><a href="#services">Preventative Maintenance</a></li>
+          <li><a href="#services">24/7 Emergency Repair</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#projects">Projects</a></li>
+          <li><a href="#contact">Careers</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="tel:9162531900">📞 916.253.1900</a></li>
+          <li>California &amp; Nevada</li>
+        </ul>
+        <p class="lic" style="margin-top:16px;">
+          <b>Licenses:</b><br>
+          CA #1119594 · CA #732770<br>
+          NV #0042603
+        </p>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Kodiak Roofing &amp; Waterproofing. All rights reserved.</span>
+      <span>Design example — content adapted from kodiakroofing.com</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Nav scroll state
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 40);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Mobile menu
+  const menuBtn = document.getElementById('menuBtn');
+  const navlinks = document.getElementById('navlinks');
+  menuBtn.addEventListener('click', () => navlinks.classList.toggle('open'));
+  navlinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navlinks.classList.remove('open')));
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
