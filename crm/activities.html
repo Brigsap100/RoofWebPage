@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activities · Kodiak CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/crm.css"><link rel="icon" href="../assets/img/logo-seal.png"></head>
+<body data-page="activities">
+<div class="app"><aside class="sidebar" id="sidebar"></aside><div class="main">
+<header class="topbar"><div style="display:flex;align-items:center;gap:14px;"><button class="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><div class="title"><h1>Activities</h1><p>Tasks, calls &amp; site visits</p></div></div>
+<div class="tools"><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search…"></div><div class="avatar">BN</div></div></header>
+<main class="content" id="content"></main></div></div>
+<script src="js/data.js"></script>
+<script>
+/* build activities */
+(function () {
+  var D = window.KODIAK_CRM;
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
+  var TODAY = new Date("2026-07-21T00:00:00");
+
+  // week window: today .. today+7 (inclusive)
+  var weekEnd = new Date(TODAY); weekEnd.setDate(weekEnd.getDate() + 7);
+
+  // working copy of activities (client-side mutable)
+  var items = D.activities.map(function (a) { return Object.assign({}, a); });
+
+  function parseDue(d) { return new Date(d + "T00:00:00"); }
+  function isOverdue(a) { return !a.done && parseDue(a.due) < TODAY; }
+  function fmtDate(d) {
+    var dt = parseDue(d);
+    return dt.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+  }
+
+  var TYPE_BADGE = { "Call":"b", "Email":"b", "Meeting":"y", "Site Visit":"g" };
+
+  var ICON = {
+    tasks:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    overdue:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    week:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>',
+    done:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>'
+  };
+
+  var filter = "upcoming"; // or "completed"
+
+  function computeStats() {
+    var open = items.filter(function (a) { return !a.done; }).length;
+    var overdue = items.filter(isOverdue).length;
+    var dueWeek = items.filter(function (a) {
+      if (a.done) return false;
+      var d = parseDue(a.due);
+      return d >= TODAY && d <= weekEnd;
+    }).length;
+    var completed = items.filter(function (a) { return a.done; }).length;
+    return { open:open, overdue:overdue, dueWeek:dueWeek, completed:completed };
+  }
+
+  function stat(icon, value, label) {
+    return '<div class="stat"><div class="ic"><svg viewBox="0 0 24 24">' + icon + '</svg></div>' +
+      '<div class="v mono">' + value + '</div><div class="l">' + label + '</div></div>';
+  }
+
+  function renderStats() {
+    var s = computeStats();
+    return '<div class="grid cols-4" id="statRow">' +
+      stat(ICON.tasks, s.open, "Open Tasks") +
+      stat(ICON.overdue, s.overdue, "Overdue") +
+      stat(ICON.week, s.dueWeek, "Due This Week") +
+      stat(ICON.done, s.completed, "Completed") +
+    '</div>';
+  }
+
+  function sorted() {
+    return items.slice().sort(function (a, b) { return parseDue(a.due) - parseDue(b.due); });
+  }
+
+  function rowHtml(a) {
+    var badge = TYPE_BADGE[a.type] || "b";
+    var overdue = isOverdue(a);
+    var dueCell = overdue
+      ? '<span style="color:var(--bad);font-weight:600;">' + fmtDate(a.due) +
+        '</span><div class="sub" style="color:var(--bad);">Overdue</div>'
+      : fmtDate(a.due);
+    return '<tr data-id="' + a.id + '" data-done="' + (a.done ? "1" : "0") + '">' +
+      '<td><input type="checkbox" class="rowchk" ' + (a.done ? "checked" : "") + '></td>' +
+      '<td><span class="badge ' + badge + '">' + esc(a.type) + '</span></td>' +
+      '<td><span class="strong">' + esc(a.subject) + '</span></td>' +
+      '<td>' + esc(a.account) + '</td>' +
+      '<td>' + esc(a.owner) + '</td>' +
+      '<td>' + dueCell + '</td>' +
+    '</tr>';
+  }
+
+  function renderTableBody() {
+    var rows = sorted().filter(function (a) {
+      return filter === "completed" ? a.done : !a.done;
+    });
+    if (!rows.length) {
+      return '<tr><td colspan="6"><div class="empty">No ' +
+        (filter === "completed" ? "completed" : "upcoming") + ' activities.</div></td></tr>';
+    }
+    return rows.map(rowHtml).join("");
+  }
+
+  function renderCard() {
+    return '<div class="card">' +
+      '<div class="card-head">' +
+        '<div><h3>Activities</h3><p>All tasks across accounts</p></div>' +
+        '<div style="display:flex;gap:8px;" id="filterPills">' +
+          '<span class="pill" data-filter="upcoming" role="button" tabindex="0">Upcoming</span>' +
+          '<span class="pill" data-filter="completed" role="button" tabindex="0">Completed</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="table-wrap"><table class="table"><thead><tr>' +
+        '<th style="width:36px;"></th><th>Type</th><th>Subject</th><th>Account</th><th>Owner</th><th>Due</th>' +
+      '</tr></thead><tbody id="actBody">' + renderTableBody() + '</tbody></table></div>' +
+    '</div>';
+  }
+
+  function paintPills() {
+    var pills = document.querySelectorAll("#filterPills .pill");
+    pills.forEach(function (p) {
+      var active = p.getAttribute("data-filter") === filter;
+      if (active) {
+        p.style.background = "var(--red)";
+        p.style.color = "#fff";
+        p.style.borderColor = "var(--red)";
+      } else {
+        p.style.background = "";
+        p.style.color = "";
+        p.style.borderColor = "";
+      }
+    });
+  }
+
+  function refreshStats() {
+    var row = document.getElementById("statRow");
+    if (row) row.outerHTML = renderStats();
+  }
+
+  function refreshBody() {
+    var body = document.getElementById("actBody");
+    if (body) body.innerHTML = renderTableBody();
+  }
+
+  function render() {
+    var el = document.getElementById("content");
+    el.innerHTML = renderStats() + renderCard();
+    paintPills();
+    wire();
+  }
+
+  function wire() {
+    var content = document.getElementById("content");
+    content.addEventListener("change", function (e) {
+      var chk = e.target.closest(".rowchk");
+      if (!chk) return;
+      var tr = chk.closest("tr");
+      var id = Number(tr.getAttribute("data-id"));
+      var it = items.find(function (a) { return a.id === id; });
+      if (it) it.done = chk.checked;
+      refreshBody();
+      refreshStats();
+    });
+    var pills = document.getElementById("filterPills");
+    pills.addEventListener("click", function (e) {
+      var p = e.target.closest(".pill");
+      if (!p) return;
+      filter = p.getAttribute("data-filter");
+      paintPills();
+      refreshBody();
+    });
+    pills.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      var p = e.target.closest(".pill");
+      if (!p) return;
+      e.preventDefault();
+      filter = p.getAttribute("data-filter");
+      paintPills();
+      refreshBody();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", render);
+})();
+</script>
+<script src="js/app.js"></script>
+</body></html>

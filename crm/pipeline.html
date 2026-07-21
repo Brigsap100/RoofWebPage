@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline · Kodiak CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/crm.css"><link rel="icon" href="../assets/img/logo-seal.png"></head>
+<body data-page="pipeline">
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div class="title"><h1>Pipeline</h1><p>Drag deals between stages</p></div>
+      </div>
+      <div class="tools"><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search…"></div><div class="avatar">BN</div></div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script>
+(function () {
+  var D = window.KODIAK_CRM;
+  var esc = (window.CRM && window.CRM.esc) || function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; });
+  };
+  var content = document.getElementById("content");
+  var m = D.metrics();
+
+  function initials(name) {
+    var parts = String(name || "").trim().split(/\s+/);
+    var a = parts[0] ? parts[0][0] : "";
+    var b = parts.length > 1 ? parts[parts.length - 1][0] : "";
+    return (a + b).toUpperCase();
+  }
+
+  // ---- 1. Summary row ----
+  var stats = [
+    { label:"Open Pipeline",     value:D.fmtShort(m.pipelineValue), icon:'<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>' },
+    { label:"Weighted Forecast", value:D.fmtShort(m.weighted),      icon:'<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>' },
+    { label:"Open Deals",        value:String(m.openCount),         icon:'<path d="M3 6h18M6 12h12M10 18h4"/>' }
+  ];
+  var statHtml = '<div class="grid cols-3">' + stats.map(function (s) {
+    return '<div class="stat">' +
+      '<div class="ic"><svg viewBox="0 0 24 24">' + s.icon + '</svg></div>' +
+      '<div class="v mono">' + esc(s.value) + '</div>' +
+      '<div class="l">' + esc(s.label) + '</div>' +
+    '</div>';
+  }).join("") + '</div>';
+
+  // ---- 2. Kanban board ----
+  var COLS = ["lead","inspection","estimating","bid","negotiation"];
+  var stages = D.byStage().filter(function (s) { return COLS.indexOf(s.key) !== -1; });
+
+  function cardHtml(o) {
+    return '<div class="kcard" draggable="true" data-id="' + o.id + '" data-value="' + o.value + '">' +
+      '<div class="kn">' + esc(o.name) + '</div>' +
+      '<div class="ka">' + esc(o.account) + '</div>' +
+      '<div class="kf">' +
+        '<span class="kv mono">' + esc(D.fmtShort(o.value)) + '</span>' +
+        '<span class="ko" title="' + esc(o.owner) + '">' + esc(initials(o.owner)) + '</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  var boardHtml = '<div class="kanban">' + stages.map(function (s) {
+    return '<div class="klist" data-stage="' + s.key + '">' +
+      '<div class="kh">' +
+        '<span class="lbl">' + esc(s.label) + '</span>' +
+        '<span class="amt"><span class="kcount">' + s.opps.length + '</span> · <span class="ktotal">' + esc(D.fmtShort(s.value)) + '</span></span>' +
+      '</div>' +
+      '<div class="kb">' + s.opps.map(cardHtml).join("") + '</div>' +
+    '</div>';
+  }).join("") + '</div>';
+
+  content.innerHTML = statHtml + boardHtml;
+
+  // ---- 3. Drag and drop ----
+  var dragged = null;
+
+  function recalc(kb) {
+    if (!kb) return;
+    var list = kb.closest(".klist");
+    var cards = kb.querySelectorAll(".kcard");
+    var total = 0;
+    cards.forEach(function (c) { total += Number(c.getAttribute("data-value")) || 0; });
+    list.querySelector(".kcount").textContent = cards.length;
+    list.querySelector(".ktotal").textContent = D.fmtShort(total);
+  }
+
+  content.addEventListener("dragstart", function (e) {
+    var card = e.target.closest(".kcard");
+    if (!card) return;
+    dragged = card;
+    card.classList.add("dragging");
+    if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", card.getAttribute("data-id")); }
+  });
+  content.addEventListener("dragend", function () {
+    if (dragged) dragged.classList.remove("dragging");
+    dragged = null;
+  });
+  content.addEventListener("dragover", function (e) {
+    if (dragged && e.target.closest(".kb")) e.preventDefault();
+  });
+  content.addEventListener("drop", function (e) {
+    var kb = e.target.closest(".kb");
+    if (!kb || !dragged) return;
+    e.preventDefault();
+    var from = dragged.parentNode;
+    if (from === kb) return;
+    kb.appendChild(dragged);
+    recalc(from);
+    recalc(kb);
+  });
+})();
+</script>
+<script src="js/app.js"></script>
+</body></html>

@@ -193,6 +193,16 @@ footer.site .tag{color:var(--text-soft);margin:16px 0;max-width:280px;font-size:
 .lic{font-size:.85rem;color:var(--text-soft);}.lic b{color:#d8cec1;}
 .fb{border-top:1px solid var(--line);padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.82rem;color:#6f645a;}
 
+/* Employee portal band */
+.emp-portal{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  border-top:1px solid var(--line);padding:22px 0;margin-bottom:6px;}
+.emp-portal .ep-label{font-family:var(--sans);text-transform:uppercase;letter-spacing:2px;font-size:.75rem;color:var(--gold-2);font-weight:600;display:flex;align-items:center;gap:10px;}
+.emp-portal .ep-label svg{width:16px;height:16px;stroke:var(--gold-2);fill:none;stroke-width:1.8;}
+.emp-portal .ep-links{display:flex;gap:14px;flex-wrap:wrap;}
+.emp-portal .ep-links a{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:.88rem;color:#e7ddd0;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:40px;padding:9px 18px;transition:.2s;}
+.emp-portal .ep-links a:hover{border-color:var(--gold-2);color:var(--gold-2);}
+
 /* reveal */
 .reveal{opacity:0;transform:translateY(28px);transition:.8s cubic-bezier(.2,.7,.2,1);}
 .reveal.in{opacity:1;transform:none;}

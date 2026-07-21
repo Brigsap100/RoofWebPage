@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimates · Kodiak CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/crm.css"><link rel="icon" href="../assets/img/logo-seal.png"></head>
+<body data-page="estimates">
+<div class="app"><aside class="sidebar" id="sidebar"></aside><div class="main">
+<header class="topbar"><div style="display:flex;align-items:center;gap:14px;"><button class="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><div class="title"><h1>Estimates</h1><p>Quotes &amp; bids</p></div></div>
+<div class="tools"><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search…"></div><div class="avatar">BN</div></div></header>
+<main class="content" id="content"></main></div></div>
+<script src="js/data.js"></script><script>
+(function () {
+  var D = window.KODIAK_CRM;
+  var est = D.estimates;
+
+  // ---- Stat metrics --------------------------------------------------
+  var totalCount = est.length;
+  var totalValue = est.reduce(function (s, e) { return s + e.amount; }, 0);
+  var acceptedValue = est.filter(function (e) { return e.status === "Accepted"; })
+                         .reduce(function (s, e) { return s + e.amount; }, 0);
+  var acceptedCount = est.filter(function (e) { return e.status === "Accepted"; }).length;
+  var rejectedCount = est.filter(function (e) { return e.status === "Rejected"; }).length;
+  var decided = acceptedCount + rejectedCount;
+  var acceptanceRate = decided ? Math.round(acceptedCount / decided * 100) : 0;
+
+  // ---- SVG icons -----------------------------------------------------
+  var icDoc   = '<svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>';
+  var icMoney = '<svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+  var icCheck = '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>';
+  var icRate  = '<svg viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>';
+
+  var badgeClass = { Draft:"badge b", Sent:"badge y", Accepted:"badge g", Rejected:"badge r" };
+
+  // ---- Stat row ------------------------------------------------------
+  var stats =
+    '<div class="grid cols-4">' +
+      stat(icDoc,   String(totalCount),            "Total Estimates") +
+      stat(icMoney, D.fmtShort(totalValue),        "Total Value") +
+      stat(icCheck, D.fmtShort(acceptedValue),     "Accepted Value") +
+      stat(icRate,  acceptanceRate + "%",          "Acceptance Rate") +
+    '</div>';
+
+  function stat(ic, v, l) {
+    return '<div class="stat"><div class="ic">' + ic + '</div>' +
+           '<div class="v">' + CRM.esc(v) + '</div>' +
+           '<div class="l">' + CRM.esc(l) + '</div></div>';
+  }
+
+  // ---- Table ---------------------------------------------------------
+  var rows = est.map(function (e) {
+    return '<tr>' +
+      '<td><span class="strong mono">' + CRM.esc(e.number) + '</span></td>' +
+      '<td>' + CRM.esc(e.account) + '</td>' +
+      '<td class="mono">' + CRM.esc(D.fmt(e.amount)) + '</td>' +
+      '<td><span class="' + (badgeClass[e.status] || "badge") + '">' + CRM.esc(e.status) + '</span></td>' +
+      '<td class="sub">' + CRM.esc(e.date) + '</td>' +
+    '</tr>';
+  }).join("");
+
+  var card =
+    '<div class="card">' +
+      '<div class="card-head">' +
+        '<div><h3>All Estimates</h3><p>' + totalCount + ' quotes &amp; bids</p></div>' +
+        '<button class="btn red" id="newEst">' +
+          '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> New Estimate</button>' +
+      '</div>' +
+      '<div class="table-wrap"><table class="table">' +
+        '<thead><tr><th>Estimate #</th><th>Account</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table></div>' +
+    '</div>';
+
+  document.getElementById("content").innerHTML = stats + card;
+
+  // ---- New Estimate drawer -------------------------------------------
+  var acctOptions = D.accounts.map(function (a) {
+    return '<option value="' + CRM.esc(a.name) + '">' + CRM.esc(a.name) + '</option>';
+  }).join("");
+
+  function newEstimateForm() {
+    var today = "2026-07-20";
+    CRM.openDrawer(
+      '<div class="dh"><h3>New Estimate</h3><button class="x" aria-label="Close">&times;</button></div>' +
+      '<div class="db">' +
+        '<div class="field"><label>Account</label><select id="fAcct">' + acctOptions + '</select></div>' +
+        '<div class="field"><label>Amount</label><input id="fAmt" type="number" placeholder="0" min="0" step="1000"></div>' +
+        '<div class="field"><label>Status</label><select id="fStatus">' +
+          '<option>Draft</option><option>Sent</option><option>Accepted</option><option>Rejected</option>' +
+        '</select></div>' +
+        '<div class="field"><label>Date</label><input id="fDate" type="date" value="' + today + '"></div>' +
+        '<button class="btn red" id="fSave" style="justify-content:center;">Save Estimate</button>' +
+      '</div>'
+    );
+    var save = document.getElementById("fSave");
+    if (save) save.addEventListener("click", function () { CRM.closeDrawer(); });
+  }
+
+  var btn = document.getElementById("newEst");
+  if (btn) btn.addEventListener("click", newEstimateForm);
+})();
+</script><script src="js/app.js"></script>
+</body></html>
