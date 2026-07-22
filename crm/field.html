@@ -259,7 +259,8 @@ KODIAK_CRM.ready.then(function () {
       '<div class="fm-wrap">' +
         '<div class="fm-sticky">' +
           '<button class="fm-back" id="fmBack">&#8249; Back</button>' +
-          '<div class="fm-cur">' + esc(state.label) + '<small>' + esc(state.sub) + '</small></div>' +
+          '<div class="fm-cur" style="flex:1;min-width:0;">' + esc(state.label) + '<small>' + esc(state.sub) + '</small></div>' +
+          '<button class="fm-back" id="fmSwitch" title="Capture to a different work order or job">&#128279; Change</button>' +
         '</div>' +
         warnCards() +
         '<div class="fm-seg" id="fmSeg">' +
@@ -279,6 +280,19 @@ KODIAK_CRM.ready.then(function () {
       '</div>';
 
     document.getElementById("fmBack").addEventListener("click", renderPicker);
+
+    // switch the capture target in place — everything captured next goes there
+    document.getElementById("fmSwitch").addEventListener("click", function () {
+      if (state.listening) return;                     // don't switch mid-recording
+      tieChooser(function (t) {
+        if (t === state.target) return;
+        state.target = t;
+        state.label = tieLabel(t) === "site capture" ? "Site capture" : tieLabel(t);
+        state.sub = tieSub(t);
+        renderCapture();
+        flash("Now capturing to " + tieLabel(t) + ".");
+      });
+    });
 
     // segmented kind toggle
     var seg = document.getElementById("fmSeg");
@@ -425,6 +439,18 @@ KODIAK_CRM.ready.then(function () {
       return p ? p.name : "job";
     }
     return "site capture";
+  }
+
+  function tieSub(t) {
+    if (t.indexOf("wo:") === 0) {
+      var w = (D.workOrders || []).find(function (x) { return String(x.id) === t.slice(3); });
+      return w ? w.account : "";
+    }
+    if (t.indexOf("job:") === 0) {
+      var p = (D.projects || []).find(function (x) { return String(x.id) === t.slice(4); });
+      return p ? jobAccount(p) : "";
+    }
+    return "General";
   }
 
   function flash(msg) {
