@@ -14,6 +14,11 @@
     { key:"pipeline",  label:"Pipeline",   href:"pipeline.html",  icon:'<path d="M3 6h18M6 12h12M10 18h4"/>' },
     { key:"accounts",  label:"Accounts",   href:"accounts.html",  icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>' },
     { key:"projects",  label:"Projects",   href:"projects.html",  icon:'<path d="M3 7h18v13H3z"/><path d="M8 7V4h8v3"/>' },
+    { key:"service",   label:"Service",    href:"service.html",   icon:'<path d="M14.7 6.3a4 4 0 0 0-5.6 5L3 17.5V21h3.5l6.2-6.1a4 4 0 0 0 5-5.6L14.5 12l-2.5-2.5z"/>' },
+    { key:"workorders",label:"Work Orders",href:"workorders.html",icon:'<rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 4V2h6v2M9 11h6M9 15h6"/>' },
+    { key:"field",     label:"Field Mode", href:"field.html",     icon:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>' },
+    { key:"roofassets",label:"Roof Assets",href:"roofassets.html",icon:'<path d="M12 2l10 6-10 6L2 8z"/><path d="M2 13l10 6 10-6"/>' },
+    { key:"contracts", label:"Contracts",  href:"contracts.html", icon:'<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/><path d="M9 15a3 3 0 1 1 6 0v3H9z"/>' },
     { key:"estimates", label:"Estimates",  href:"estimates.html", icon:'<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/>' },
     { key:"activities",label:"Activities", href:"activities.html",icon:'<path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/>' },
     { key:"settings",  label:"Settings",   href:"settings.html",  icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>' }

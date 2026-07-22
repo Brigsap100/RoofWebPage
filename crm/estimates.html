@@ -9,7 +9,7 @@
 <header class="topbar"><div style="display:flex;align-items:center;gap:14px;"><button class="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><div class="title"><h1>Estimates</h1><p>Quotes &amp; bids</p></div></div>
 <div class="tools"><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search…"></div><div class="avatar">BN</div></div></header>
 <main class="content" id="content"></main></div></div>
-<script src="js/data.js"></script><script>
+<script src="js/data.js"></script><script src="js/capture.js"></script><script>
 KODIAK_CRM.ready.then(function () {
   var D = window.KODIAK_CRM;
   var esc = (window.CRM && window.CRM.esc) || function (s) {
@@ -82,7 +82,7 @@ KODIAK_CRM.ready.then(function () {
   }).join("");
 
   function newEstimateForm() {
-    var today = "2026-07-20";
+    var today = new Date().toISOString().slice(0, 10);
     CRM.openDrawer(
       '<div class="dh"><h3>New Estimate</h3><button class="x" aria-label="Close">&times;</button></div>' +
       '<div class="db">' +
@@ -92,11 +92,69 @@ KODIAK_CRM.ready.then(function () {
           '<option>Draft</option><option>Sent</option><option>Accepted</option><option>Rejected</option>' +
         '</select></div>' +
         '<div class="field"><label>Date</label><input id="fDate" type="date" value="' + today + '"></div>' +
+        '<div class="field"><label>Scope notes (dictate or type)</label>' +
+          '<textarea id="estScope" rows="4" placeholder="Describe the roof scope…"></textarea>' +
+          '<button class="btn ghost" id="estDictate" type="button" style="align-self:flex-start;">' +
+            '🎤 Dictate</button>' +
+          '<span id="estDictateHint" style="font-size:.78rem;color:var(--text-soft);"></span>' +
+        '</div>' +
         '<button class="btn red" id="fSave" style="justify-content:center;">Save Estimate</button>' +
       '</div>'
     );
     var save = document.getElementById("fSave");
     if (save) save.addEventListener("click", function () { CRM.closeDrawer(); });
+    wireDictation();
+  }
+
+  // ---- Scope-note dictation (voice → textarea) -----------------------
+  function wireDictation() {
+    var btn = document.getElementById("estDictate");
+    var area = document.getElementById("estScope");
+    var hint = document.getElementById("estDictateHint");
+    if (!btn || !area) return;
+    var cap = window.CAPTURE;
+    // Speech recognition is the only path that produces text for the
+    // textarea; hide the button when neither speech nor a recorder exists.
+    if (!cap || (!cap.supported.speech && !cap.supported.recorder)) {
+      btn.style.display = "none";
+      return;
+    }
+    if (!cap.supported.speech) {
+      // Recorder exists but can't transcribe — dictation into a textarea
+      // needs speech-to-text, so hide the button and say why.
+      btn.style.display = "none";
+      if (hint) hint.textContent = "Voice dictation is not supported in this browser.";
+      return;
+    }
+    var ctrl = null;
+    function setIdle() {
+      ctrl = null;
+      btn.innerHTML = "🎤 Dictate";
+      if (hint) hint.textContent = "";
+    }
+    btn.addEventListener("click", function () {
+      if (ctrl) { ctrl.stop(); setIdle(); return; }
+      btn.innerHTML = "■ Stop";
+      if (hint) hint.textContent = "listening…";
+      ctrl = cap.startDictation(function (text, isFinal) {
+        if (isFinal) {
+          area.value += (area.value && !/\s$/.test(area.value) ? " " : "") + text;
+          if (hint) hint.textContent = "listening…";
+        } else if (hint) {
+          hint.textContent = "listening… " + text;
+        }
+      }, function (st) {
+        if (st === "denied") {
+          setIdle();
+          if (hint) hint.textContent = "Microphone access was denied.";
+        } else if (st === "error") {
+          setIdle();
+          if (hint) hint.textContent = "Dictation failed.";
+        } else if (st === "stopped" && ctrl) {
+          setIdle();   // recognition ended on its own (silence timeout)
+        }
+      });
+    });
   }
 
   var btn = document.getElementById("newEst");

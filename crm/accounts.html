@@ -315,6 +315,39 @@ KODIAK_CRM.ready.then(function () {
       return '<div class="field"><label>' + lbl + '</label><div style="color:var(--text);">' + esc(val) + '</div></div>';
     }
 
+    // ---- Service department summary (contracts / work orders / roof assets) --
+    // All three datasets may be empty (e.g. live mode with no service rows),
+    // so every line degrades to a friendly zero state.
+    var svcContract = (D.contracts || []).find(function (c) {
+      return c.accountId === id && (c.status === "active" || c.status === "expiring");
+    });
+    var TIER_BADGE = { Platinum:"g", Gold:"y", Silver:"b" };
+    var svcContractLine = svcContract
+      ? '<span class="strong mono" style="font-size:.85rem;">' + esc(svcContract.number) + '</span> ' +
+        '<span class="badge ' + (TIER_BADGE[svcContract.tier] || "b") + '">' + esc(svcContract.tier) + '</span>'
+      : '<span style="color:var(--muted);">No service contract</span>';
+    var svcWos = (typeof D.workOrdersFor === "function")
+      ? D.workOrdersFor(id)
+      : (D.workOrders || []).filter(function (w) { return w.accountId === id; });
+    var OPEN_WO = ["new", "scheduled", "dispatched", "in-progress", "on-hold"];
+    var svcOpenWos = svcWos.filter(function (w) { return OPEN_WO.indexOf(w.status) > -1; }).length;
+    var svcAssets = (typeof D.roofAssetsFor === "function")
+      ? D.roofAssetsFor(id)
+      : (D.roofAssets || []).filter(function (r) { return r.accountId === id; });
+    var svcRoofLine;
+    if (svcAssets.length) {
+      var avgCond = svcAssets.reduce(function (s, r) { return s + (r.condition || 0); }, 0) / svcAssets.length;
+      svcRoofLine = svcAssets.length + ' section' + (svcAssets.length === 1 ? '' : 's') +
+        ' · avg condition ' + (Math.round(avgCond * 10) / 10);
+    } else {
+      svcRoofLine = 'No roof sections on file';
+    }
+    var serviceSection =
+      '<div class="section-title" style="margin-top:8px;"><h3 style="font-size:1rem;">Service</h3></div>' +
+      '<div class="field"><label>Service Contract</label><div style="color:var(--text);">' + svcContractLine + '</div></div>' +
+      line("Open Work Orders", String(svcOpenWos)) +
+      line("Roof Assets", svcRoofLine);
+
     CRM.openDrawer(
       '<div class="dh"><div><h3>' + esc(a.name) + '</h3>' +
         '<p style="color:var(--text-soft);font-size:.82rem;">' + esc(a.type) + '</p></div>' +
@@ -332,6 +365,7 @@ KODIAK_CRM.ready.then(function () {
         '<div class="section-title" style="margin-top:8px;"><h3 style="font-size:1rem;">Opportunities</h3>' +
           '<span class="pill">' + opps.length + '</span></div>' +
         '<div>' + oppRows + '</div>' +
+        serviceSection +
       '</div>'
     );
 

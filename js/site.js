@@ -118,4 +118,63 @@
       message: val('message')
     };
   });
+
+  // Service request form (service pages) → dispatch intake.
+  // Mirrors the lead form handling: in-flight guard, disabled submit,
+  // 4s timeout, and always show the note + reset (never block the user).
+  (function () {
+    var form = document.getElementById('serviceRequestForm');
+    if (!form) return;
+
+    function submitServiceRequest(payload) {
+      var controller = new AbortController();
+      var timer = setTimeout(function () { controller.abort(); }, 4000);
+      return fetch('/api/service-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      }).finally(function () { clearTimeout(timer); });
+    }
+
+    function buildPayload() {
+      var urgency = val('sr-urgency');
+      var message = val('sr-message');
+      return {
+        company: val('sr-company'),
+        name: val('sr-name'),
+        phone: val('sr-phone'),
+        email: val('sr-email'),
+        building: val('sr-building'),
+        leakLocation: '',
+        problem: urgency + ' — ' + message,
+        emergency: urgency.indexOf('Emergency') === 0,
+        urgent: urgency.indexOf('Urgent') === 0
+      };
+    }
+
+    var inFlight = false;
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (inFlight) return; // ignore double submits (e.g. a second Enter press)
+      inFlight = true;
+      var btn = form.querySelector('[type="submit"]');
+      if (btn) btn.disabled = true;
+      var settle = function () {
+        inFlight = false;
+        if (btn) btn.disabled = false;
+      };
+      var done = function () {
+        var note = document.getElementById('serviceRequestNote');
+        if (note) note.style.display = 'block';
+        form.reset();
+      };
+      try {
+        submitServiceRequest(buildPayload()).then(done, done).finally(settle);
+      } catch (e) {
+        done();
+        settle();
+      }
+    });
+  })();
 })();

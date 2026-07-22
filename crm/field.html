@@ -1,0 +1,403 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Mode · Kodiak CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/crm.css"><link rel="icon" href="../assets/img/logo-seal.png">
+<style>
+/* ---- Field Mode: mobile-first, single column, big touch targets ---- */
+.fm-wrap{max-width:640px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+.fm-h{font-size:1.15rem;margin:4px 0 2px;}
+.fm-wo{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 18px;cursor:pointer;color:var(--text);font-family:var(--sans);
+  transition:.18s;min-height:72px;}
+.fm-wo:hover{border-color:var(--gold);}
+.fm-wo.fm-emergency{border-left:3px solid var(--bad);}
+.fm-wo .fm-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.fm-wo .fm-num{font-weight:700;color:#fff;font-size:.95rem;}
+.fm-wo .fm-acct{color:var(--gold-2);font-size:.85rem;margin-bottom:4px;}
+.fm-wo .fm-prob{color:var(--text-soft);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.fm-site{min-height:52px;padding:12px 18px;opacity:.85;}
+.fm-sticky{position:sticky;top:0;z-index:15;background:var(--bg);padding:10px 0;
+  display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);}
+.fm-back{background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--text);
+  font-family:var(--sans);font-weight:600;font-size:.9rem;padding:12px 16px;cursor:pointer;min-height:48px;}
+.fm-back:hover{border-color:var(--gold);}
+.fm-sticky .fm-cur{font-family:var(--serif);font-size:1.1rem;color:#fff;}
+.fm-sticky .fm-cur small{display:block;font-family:var(--sans);font-size:.75rem;color:var(--text-soft);margin-top:2px;}
+.fm-big{width:100%;min-height:56px;font-size:1rem;justify-content:center;border-radius:12px;}
+.fm-seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+.fm-seg button{flex:1;background:var(--panel);border:none;color:var(--text-soft);font-family:var(--sans);
+  font-weight:600;font-size:.85rem;padding:12px 6px;cursor:pointer;min-height:48px;transition:.15s;}
+.fm-seg button + button{border-left:1px solid var(--line);}
+.fm-seg button.on{background:var(--red);color:#fff;}
+.fm-live{background:var(--bg-2);border:1px solid var(--bad);border-radius:12px;padding:14px;
+  color:var(--text);font-size:.95rem;min-height:56px;line-height:1.5;}
+.fm-live .fm-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--bad);
+  margin-right:8px;animation:fmPulse 1.1s ease-in-out infinite;}
+@keyframes fmPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(.75);}}
+.fm-note{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;
+  display:flex;gap:10px;align-items:flex-start;}
+.fm-note .fm-body{flex:1;min-width:0;}
+.fm-note .fm-txt{color:var(--text);font-size:.92rem;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;}
+.fm-note .fm-ts{color:var(--muted);font-size:.74rem;margin-top:6px;}
+.fm-note audio{width:100%;margin-top:4px;}
+.fm-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;line-height:1;
+  padding:8px;min-width:36px;min-height:36px;border-radius:8px;flex:none;}
+.fm-del:hover{color:var(--bad);background:var(--bg-2);}
+.fm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.fm-grid .fm-ph{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  cursor:pointer;background:var(--bg-2);padding:0;aspect-ratio:1/1;}
+.fm-grid .fm-ph img{width:100%;height:100%;object-fit:cover;display:block;}
+.fm-grid .fm-ph .fm-k{position:absolute;left:6px;bottom:6px;font-size:.62rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.6px;background:rgba(0,0,0,.6);color:var(--gold-2);
+  padding:3px 7px;border-radius:20px;}
+.fm-overlay{position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.92);display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:18px;}
+.fm-overlay img{max-width:100%;max-height:76vh;border-radius:10px;}
+.fm-overlay .fm-row{display:flex;gap:12px;}
+.fm-warn{border-color:var(--warn);}
+.fm-warn h3{color:var(--warn);font-size:.98rem;margin-bottom:4px;}
+.fm-warn p{color:var(--text-soft);font-size:.85rem;line-height:1.5;}
+.fm-hint{color:var(--text-soft);font-size:.82rem;text-align:center;}
+@media(min-width:640px){ .fm-grid{grid-template-columns:repeat(4,1fr);} }
+</style></head>
+<body data-page="field">
+<div class="app"><aside class="sidebar" id="sidebar"></aside><div class="main">
+<header class="topbar"><div style="display:flex;align-items:center;gap:14px;"><button class="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><div class="title"><h1>Field Mode</h1><p>Onsite photos &amp; voice notes</p></div></div>
+<div class="tools"><div class="avatar">BN</div></div></header>
+<main class="content" id="content"></main></div></div>
+<script src="js/data.js"></script>
+<script src="js/capture.js"></script>
+<script>
+KODIAK_CRM.ready.then(function () {
+  var D = window.KODIAK_CRM;
+  var CAP = window.CAPTURE;
+  var esc = (window.CRM && window.CRM.esc) || function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
+  var content = document.getElementById("content");
+
+  var OPEN_STATUSES = ["new", "scheduled", "dispatched", "in-progress", "on-hold"];
+  var PRIO_BADGE = { Emergency:"r", High:"y", Standard:"b" };
+  var PRIO_RANK = { Emergency:0, High:1 };
+
+  var state = { target:null, label:"", sub:"", kind:"before", ctrl:null, listening:false,
+                finalText:"", blobUrls:[] };
+
+  function revokeBlobUrls() {
+    state.blobUrls.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} });
+    state.blobUrls = [];
+  }
+
+  function fmtTs(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return "";
+    return d.toLocaleDateString("en-US", { month:"short", day:"numeric" }) + " · " +
+           d.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
+  }
+
+  function warnCards() {
+    var html = "";
+    if (!CAP.supported.secure) {
+      html += '<div class="card fm-warn"><h3>Camera &amp; mic need HTTPS (or localhost)</h3>' +
+        '<p>This page is not running in a secure context, so the camera and microphone are blocked by the browser. Open the CRM over HTTPS or on localhost to capture photos and voice notes.</p></div>';
+    }
+    if (!CAP.supported.speech && CAP.supported.recorder) {
+      html += '<div class="card fm-warn"><h3>Voice-to-text not available</h3>' +
+        '<p>This browser does not support speech recognition. Voice notes will be saved as audio recordings instead.</p></div>';
+    }
+    return html;
+  }
+
+  // ---- STEP 1: work-order picker --------------------------------------
+  function openWOs() {
+    var wos = Array.isArray(D.workOrders) ? D.workOrders : [];
+    return wos.filter(function (w) {
+      return OPEN_STATUSES.indexOf(String(w.status || "").toLowerCase()) !== -1;
+    }).sort(function (a, b) {
+      var ra = PRIO_RANK[a.priority] != null ? PRIO_RANK[a.priority] : 2;
+      var rb = PRIO_RANK[b.priority] != null ? PRIO_RANK[b.priority] : 2;
+      if (ra !== rb) return ra - rb;
+      var da = a.reportedAt || "";
+      var db = b.reportedAt || "";
+      if (da !== db) return da < db ? 1 : -1;               // newest first
+      return (Number(b.id) || 0) - (Number(a.id) || 0);
+    });
+  }
+
+  function woCard(w) {
+    var badge = PRIO_BADGE[w.priority] || "b";
+    return '<button class="fm-wo' + (w.priority === "Emergency" ? " fm-emergency" : "") +
+      '" data-wo="' + esc(String(w.id != null ? w.id : w.number)) + '">' +
+      '<span class="fm-top"><span class="fm-num mono">' + esc(w.number) + '</span>' +
+        '<span class="badge ' + badge + '">' + esc(w.priority || "Standard") + '</span></span>' +
+      '<span class="fm-acct">' + esc(w.account) + '</span>' +
+      '<span class="fm-prob">' + esc(w.problem) + '</span>' +
+    '</button>';
+  }
+
+  function renderPicker() {
+    revokeBlobUrls();
+    if (state.ctrl) { state.ctrl.stop(); state.ctrl = null; state.listening = false; }
+    state.target = null;
+    var wos = openWOs();
+    var list = wos.length
+      ? wos.map(woCard).join("")
+      : '<div class="card"><div class="empty">No open work orders.</div></div>';
+    content.innerHTML =
+      '<div class="fm-wrap">' +
+        warnCards() +
+        '<h2 class="fm-h">Select a work order</h2>' +
+        list +
+        '<button class="fm-wo fm-site" data-site="1">' +
+          '<span class="fm-top"><span class="fm-num">General site capture</span>' +
+            '<span class="badge b">Site</span></span>' +
+          '<span class="fm-prob">Photos &amp; notes not tied to a work order</span>' +
+        '</button>' +
+      '</div>';
+    content.querySelectorAll("[data-wo]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-wo");
+        var w = openWOs().find(function (x) { return String(x.id != null ? x.id : x.number) === id; });
+        if (!w) return;
+        state.target = "wo:" + id;
+        state.label = w.number;
+        state.sub = w.account;
+        renderCapture();
+      });
+    });
+    var site = content.querySelector("[data-site]");
+    if (site) site.addEventListener("click", function () {
+      state.target = "site:general";
+      state.label = "Site capture";
+      state.sub = "General";
+      renderCapture();
+    });
+  }
+
+  // ---- STEP 2: capture screen ------------------------------------------
+  function renderCapture() {
+    state.kind = "before";
+    state.finalText = "";
+    state.listening = false;
+    var canVoice = CAP.supported.speech || CAP.supported.recorder;
+    content.innerHTML =
+      '<div class="fm-wrap">' +
+        '<div class="fm-sticky">' +
+          '<button class="fm-back" id="fmBack">&#8249; Back</button>' +
+          '<div class="fm-cur">' + esc(state.label) + '<small>' + esc(state.sub) + '</small></div>' +
+        '</div>' +
+        warnCards() +
+        '<div class="fm-seg" id="fmSeg">' +
+          '<button data-kind="before" class="on">Before</button>' +
+          '<button data-kind="after">After</button>' +
+          '<button data-kind="site">Site</button>' +
+        '</div>' +
+        '<button class="btn red fm-big" id="fmPhoto">&#128247; Add Photo</button>' +
+        '<button class="btn gold fm-big" id="fmVoice"' + (canVoice ? "" : " disabled") + '>&#127908; Record Note</button>' +
+        (canVoice ? "" : '<div class="fm-hint">Voice capture is not supported in this browser.</div>') +
+        '<div class="fm-live" id="fmLive" style="display:none;"></div>' +
+        '<div class="fm-hint" id="fmMsg" style="display:none;"></div>' +
+        '<h2 class="fm-h">Notes</h2>' +
+        '<div id="fmNotes"></div>' +
+        '<h2 class="fm-h">Photos</h2>' +
+        '<div id="fmPhotos"></div>' +
+      '</div>';
+
+    document.getElementById("fmBack").addEventListener("click", renderPicker);
+
+    // segmented kind toggle
+    var seg = document.getElementById("fmSeg");
+    seg.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-kind]");
+      if (!b) return;
+      state.kind = b.getAttribute("data-kind");
+      seg.querySelectorAll("button").forEach(function (x) {
+        x.classList.toggle("on", x === b);
+      });
+    });
+
+    // photo capture
+    var photoBtn = document.getElementById("fmPhoto");
+    photoBtn.addEventListener("click", function () {
+      photoBtn.disabled = true;
+      CAP.addPhoto(state.target, state.kind).then(function (rec) {
+        photoBtn.disabled = false;
+        if (rec) refreshPhotos();
+      }, function () {
+        photoBtn.disabled = false;
+        flash("Could not save photo.");
+      });
+    });
+
+    // voice note toggle
+    var voiceBtn = document.getElementById("fmVoice");
+    var live = document.getElementById("fmLive");
+    if (canVoice) voiceBtn.addEventListener("click", function () {
+      if (state.listening) { stopVoice(); return; }
+      startVoice();
+    });
+
+    function startVoice() {
+      state.finalText = "";
+      state.listening = true;
+      voiceBtn.innerHTML = "&#9632; Stop &amp; Save";
+      live.style.display = "";
+      live.innerHTML = '<span class="fm-dot"></span><em>Listening&hellip;</em>';
+      state.ctrl = CAP.startDictation(function (text, isFinal) {
+        if (isFinal) state.finalText += (state.finalText ? " " : "") + text;
+        var interim = isFinal ? "" : text;
+        var body = esc(state.finalText) +
+          (interim ? ' <em style="color:var(--text-soft);">' + esc(interim) + '</em>' : "");
+        if (!body.trim()) body = '<em>Listening&hellip;</em>';
+        live.innerHTML = '<span class="fm-dot"></span>' + body;
+      }, function (st) {
+        if (st === "recording") {
+          live.innerHTML = '<span class="fm-dot"></span><em>Recording audio&hellip; tap Stop to save.</em>';
+        } else if (st === "audio-saved") {
+          resetVoiceUi();
+          flash("Audio note saved.");
+          refreshNotes();
+        } else if (st === "denied") {
+          resetVoiceUi();
+          flash("Microphone access was denied. Allow mic access in browser settings.");
+        } else if (st === "error" || st === "unsupported") {
+          resetVoiceUi();
+          flash("Voice capture failed.");
+        } else if (st === "stopped" && state.listening) {
+          // recognition ended on its own (silence timeout) — save what we have
+          finishSpeechNote();
+        }
+      }, state.target);
+    }
+
+    function stopVoice() {
+      var ctrl = state.ctrl;
+      state.listening = false;                 // so the onend handler doesn't double-save
+      if (ctrl) ctrl.stop();
+      if (ctrl && ctrl.mode === "speech") finishSpeechNote();
+      else resetVoiceUi();                     // audio path saves via "audio-saved"
+    }
+
+    function finishSpeechNote() {
+      var text = state.finalText.trim();
+      state.finalText = "";
+      resetVoiceUi();
+      if (!text) { flash("No speech captured."); return; }
+      CAP.saveNote(state.target, text).then(function () {
+        flash("Note saved.");
+        refreshNotes();
+      }, function () { flash("Could not save note."); });
+    }
+
+    function resetVoiceUi() {
+      state.listening = false;
+      state.ctrl = null;
+      voiceBtn.innerHTML = "&#127908; Record Note";
+      live.style.display = "none";
+      live.innerHTML = "";
+    }
+
+    refreshNotes();
+    refreshPhotos();
+  }
+
+  function flash(msg) {
+    var el = document.getElementById("fmMsg");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = "";
+    clearTimeout(flash.t);
+    flash.t = setTimeout(function () { el.style.display = "none"; }, 3500);
+  }
+
+  // ---- Notes list -------------------------------------------------------
+  function refreshNotes() {
+    var box = document.getElementById("fmNotes");
+    if (!box) return;
+    CAP.listNotes(state.target).then(function (notes) {
+      if (!document.getElementById("fmNotes")) return;   // navigated away
+      notes.sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+      if (!notes.length) {
+        box.innerHTML = '<div class="card"><div class="empty" style="padding:22px;">No notes yet.</div></div>';
+        return;
+      }
+      box.innerHTML = notes.map(function (n) {
+        var body;
+        if (n.text != null && n.text !== "") {
+          body = '<div class="fm-txt">' + esc(n.text) + '</div>';
+        } else if (n.audioBlob) {
+          var url = URL.createObjectURL(n.audioBlob);
+          state.blobUrls.push(url);
+          body = '<audio controls src="' + url + '"></audio>';
+        } else {
+          body = '<div class="fm-txt" style="color:var(--muted);">(empty note)</div>';
+        }
+        return '<div class="fm-note"><div class="fm-body">' + body +
+          '<div class="fm-ts">' + esc(fmtTs(n.createdAt)) + '</div></div>' +
+          '<button class="fm-del" data-note="' + n.id + '" aria-label="Delete note">&#10005;</button></div>';
+      }).join("");
+      box.querySelectorAll("[data-note]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          CAP.deleteNote(Number(b.getAttribute("data-note"))).then(refreshNotes);
+        });
+      });
+    }, function () {
+      box.innerHTML = '<div class="card"><div class="empty" style="padding:22px;">Could not load notes.</div></div>';
+    });
+  }
+
+  // ---- Photos grid --------------------------------------------------------
+  function refreshPhotos() {
+    var box = document.getElementById("fmPhotos");
+    if (!box) return;
+    CAP.listPhotos(state.target).then(function (photos) {
+      if (!document.getElementById("fmPhotos")) return;
+      photos.sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+      if (!photos.length) {
+        box.innerHTML = '<div class="card"><div class="empty" style="padding:22px;">No photos yet.</div></div>';
+        return;
+      }
+      box.innerHTML = '<div class="fm-grid">' + photos.map(function (p) {
+        return '<button class="fm-ph" data-photo="' + p.id + '">' +
+          '<img src="' + esc(p.dataUrl) + '" alt="' + esc(p.kind) + ' photo">' +
+          '<span class="fm-k">' + esc(p.kind) + '</span></button>';
+      }).join("") + '</div>';
+      box.querySelectorAll("[data-photo]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var id = Number(b.getAttribute("data-photo"));
+          var p = photos.find(function (x) { return x.id === id; });
+          if (p) openPhoto(p);
+        });
+      });
+    }, function () {
+      box.innerHTML = '<div class="card"><div class="empty" style="padding:22px;">Could not load photos.</div></div>';
+    });
+  }
+
+  function openPhoto(p) {
+    var ov = document.createElement("div");
+    ov.className = "fm-overlay";
+    ov.innerHTML =
+      '<img src="' + esc(p.dataUrl) + '" alt="' + esc(p.kind) + ' photo">' +
+      '<div class="fm-row">' +
+        '<button class="btn ghost" data-close>Close</button>' +
+        '<button class="btn red" data-delete>Delete photo</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    function close() { ov.remove(); }
+    ov.addEventListener("click", function (e) {
+      if (e.target === ov || e.target.closest("[data-close]")) close();
+      else if (e.target.closest("[data-delete]")) {
+        CAPTURE.deletePhoto(p.id).then(function () { close(); refreshPhotos(); });
+      }
+    });
+  }
+
+  renderPicker();
+});
+</script>
+<script src="js/app.js"></script>
+</body></html>

@@ -46,7 +46,7 @@ KODIAK_CRM.ready.then(function () {
       return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
 
   var DEFAULT_BASE = "/api/rest";
-  var ENTITIES = ["accounts","opportunities","projects","estimates","activities","leads"];
+  var ENTITIES = ["accounts","opportunities","projects","estimates","activities","leads","roofassets","workorders","contracts"];
   var MODES = [
     { key:"auto", title:"Auto",  desc:"Try the live API first, fall back to demo data if it is unavailable. (Recommended)" },
     { key:"live", title:"Live",  desc:"Always load from the API. Data will be empty if the backend is not connected." },

@@ -40,7 +40,43 @@ const QUERIES = {
            Email AS email, Phone AS phone, Service AS service,
            Position AS position, Message AS message, Status AS status,
            CONVERT(varchar(10), CreatedDate, 23) AS createdDate, Owner AS owner
-    FROM dbo.Leads ORDER BY Id DESC`
+    FROM dbo.Leads ORDER BY Id DESC`,
+  roofassets: `
+    SELECT r.Id AS id, r.AccountId AS accountId, a.Name AS account,
+           r.Building AS building, r.Address AS address, r.SectionCode AS section,
+           r.SystemType AS [system], r.Sqft AS sqft, r.InstallYear AS installYear,
+           r.ConditionScore AS [condition], r.RemainingLifeYears AS remainingLife,
+           r.WarrantyType AS warrantyType,
+           CONVERT(varchar(10), r.WarrantyExpiry, 23) AS warrantyExpiry,
+           r.AccessNotes AS accessNotes
+    FROM dbo.RoofAssets r JOIN dbo.Accounts a ON a.Id = r.AccountId
+    ORDER BY r.Id`,
+  workorders: `
+    SELECT w.Id AS id, w.Number AS number, w.AccountId AS accountId,
+           COALESCE(a.Name, N'— unmatched —') AS account,
+           w.RoofAssetId AS roofAssetId, w.ContractId AS contractId,
+           w.Type AS type, w.Priority AS priority, w.Status AS status,
+           w.Problem AS problem, w.LeakLocation AS leakLocation,
+           CONVERT(varchar(19), w.ReportedAt, 126) AS reportedAt,
+           CONVERT(varchar(10), w.ScheduledDate, 23) AS scheduledDate,
+           CONVERT(varchar(19), w.CompletedAt, 126) AS completedAt,
+           w.Tech AS tech, CAST(w.NteAmount AS FLOAT) AS nte, w.PoNumber AS po,
+           w.Resolution AS resolution, w.PhotosBefore AS photosBefore,
+           w.PhotosAfter AS photosAfter, w.Deficiencies AS deficiencies,
+           CAST(w.InvoiceAmount AS FLOAT) AS invoiceAmount
+    FROM dbo.WorkOrders w LEFT JOIN dbo.Accounts a ON a.Id = w.AccountId
+    ORDER BY w.Id DESC`,
+  contracts: `
+    SELECT c.Id AS id, c.Number AS number, c.AccountId AS accountId, a.Name AS account,
+           c.Tier AS tier, c.BillingFrequency AS billing,
+           CAST(c.AnnualValue AS FLOAT) AS annualValue,
+           CONVERT(varchar(10), c.StartDate, 23) AS [start],
+           CONVERT(varchar(10), c.EndDate, 23) AS [end],
+           c.VisitsPerYear AS visitsPerYear, c.VisitsCompleted AS visitsCompleted,
+           CONVERT(varchar(10), c.NextVisitDue, 23) AS nextVisitDue,
+           c.Status AS status, c.BuildingsCovered AS buildings
+    FROM dbo.ServiceContracts c JOIN dbo.Accounts a ON a.Id = c.AccountId
+    ORDER BY c.Id`
 };
 
 let pool; // reused across warm invocations

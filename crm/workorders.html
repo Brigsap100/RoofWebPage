@@ -1,0 +1,417 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work Orders · Kodiak CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/crm.css"><link rel="icon" href="../assets/img/logo-seal.png">
+<style>
+  /* page-scoped tweaks: board fills the card, drawer badges row */
+  #woBoard .kanban{padding-top:4px;}
+  .kcard .kf .badge{font-size:.66rem;padding:3px 9px;}
+</style>
+</head>
+<body data-page="workorders">
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div class="title"><h1>Work Orders</h1><p>Service dispatch board</p></div>
+      </div>
+      <div class="tools">
+        <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search…"></div>
+        <div class="avatar">BN</div>
+      </div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/capture.js"></script>
+<script>
+/* Work orders: board / list views, type filters, detail drawer */
+KODIAK_CRM.ready.then(function () {
+  var D = window.KODIAK_CRM;
+  var esc = (window.CRM && window.CRM.esc) || function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; });
+  };
+  var content = document.getElementById("content");
+
+  var OPEN = ["new","scheduled","dispatched","in-progress","on-hold"];
+  var BOARD_COLS = [
+    { key:"new",         label:"New" },
+    { key:"scheduled",   label:"Scheduled" },
+    { key:"dispatched",  label:"Dispatched" },
+    { key:"in-progress", label:"In Progress" },
+    { key:"completed",   label:"Completed" }
+  ];
+  var STATUS_BADGE = {
+    "new":"b","scheduled":"b","dispatched":"y","in-progress":"y","on-hold":"r",
+    "completed":"g","invoiced":"g","closed":"","cancelled":"r"
+  };
+  var STATUS_LABEL = {
+    "new":"New","scheduled":"Scheduled","dispatched":"Dispatched","in-progress":"In Progress",
+    "on-hold":"On Hold","completed":"Completed","invoiced":"Invoiced","closed":"Closed","cancelled":"Cancelled"
+  };
+  var PRI_BADGE = { "Emergency":"r", "High":"y", "Standard":"b" };
+  var TYPE_FILTERS = [
+    { key:"all",         label:"All",        type:null },
+    { key:"leak",        label:"Leak",       type:"Leak Call" },
+    { key:"repair",      label:"Repair",     type:"Repair" },
+    { key:"maintenance", label:"Maintenance",type:"Preventative Maintenance" },
+    { key:"inspection",  label:"Inspection", type:"Inspection" },
+    { key:"emergency",   label:"Emergency",  type:"Emergency" },
+    { key:"warranty",    label:"Warranty",   type:"Warranty Claim" }
+  ];
+  var view = "board";
+  var typeFilter = "all";
+
+  function initials(name) {
+    var parts = String(name || "").trim().split(/\s+/);
+    var a = parts[0] ? parts[0][0] : "";
+    var b = parts.length > 1 ? parts[parts.length - 1][0] : "";
+    return (a + b).toUpperCase() || "–";
+  }
+  function fmtDate(d) {
+    if (!d) return "—";
+    var dt = new Date(String(d).indexOf("T") === -1 ? d + "T00:00:00" : d);
+    return dt.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+  }
+  // reportedAt/completedAt are naive-UTC "YYYY-MM-DDTHH:MM:SS" strings —
+  // append "Z" so they parse as UTC (date-only strings stay as-is).
+  function parseUTC(s) {
+    if (!s) return null;
+    s = String(s);
+    return new Date(s.length <= 10 || /[Zz]|[+-]\d\d:?\d\d$/.test(s) ? s : s + "Z");
+  }
+  function fmtDateTime(d) {
+    if (!d) return "—";
+    return parseUTC(d).toLocaleString("en-US", { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" });
+  }
+  function todayStr() {
+    var t = new Date();
+    return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+  }
+  function ageDays(w) {
+    return Math.max(0, Math.floor((Date.now() - parseUTC(w.reportedAt).getTime()) / 864e5));
+  }
+  function isOpen(w) { return OPEN.indexOf(w.status) !== -1; }
+  function woValue(w) { return Number(w.invoiceAmount != null ? w.invoiceAmount : w.nte) || 0; }
+  function matchesType(w) {
+    if (typeFilter === "all") return true;
+    var f = TYPE_FILTERS.find(function (x) { return x.key === typeFilter; });
+    return !!f && w.type === f.type;
+  }
+  function filtered() { return D.workOrders.filter(matchesType); }
+  function truncate(s, n) {
+    s = String(s || "");
+    return s.length > n ? s.slice(0, n - 1) + "…" : s;
+  }
+
+  // ---- 1. Stat tiles ---------------------------------------------------
+  function renderStats() {
+    var wos = D.workOrders;
+    var open = wos.filter(isOpen).length;
+    var emergencies = wos.filter(function (w) { return isOpen(w) && w.priority === "Emergency"; }).length;
+    var today = todayStr();
+    var dueToday = wos.filter(function (w) { return isOpen(w) && w.scheduledDate === today; }).length;
+    var ym = today.slice(0, 7);
+    var doneMonth = wos.filter(function (w) { return w.completedAt && String(w.completedAt).slice(0, 7) === ym; }).length;
+    var ICON = {
+      open: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+      em:   '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
+      due:  '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>',
+      done: '<path d="M20 6L9 17l-5-5"/>'
+    };
+    var tiles = [
+      { ic: ICON.open, v: open,       l: "Open Work Orders" },
+      { ic: ICON.em,   v: emergencies,l: "Emergencies Active" },
+      { ic: ICON.due,  v: dueToday,   l: "Due Today" },
+      { ic: ICON.done, v: doneMonth,  l: "Completed This Month" }
+    ];
+    return '<div class="grid cols-4" id="statRow">' + tiles.map(function (t) {
+      return '<div class="stat">' +
+        '<div class="ic"><svg viewBox="0 0 24 24">' + t.ic + '</svg></div>' +
+        '<div class="v mono">' + t.v + '</div>' +
+        '<div class="l">' + esc(t.l) + '</div>' +
+      '</div>';
+    }).join("") + '</div>';
+  }
+  function refreshStats() {
+    var row = document.getElementById("statRow");
+    if (row) row.outerHTML = renderStats();
+  }
+
+  // ---- 2. Board view -----------------------------------------------------
+  function kcardHtml(w) {
+    var em = w.priority === "Emergency" ? ' style="border-left:3px solid var(--bad);"' : "";
+    return '<div class="kcard" draggable="true" data-id="' + w.id + '" data-value="' + woValue(w) + '"' + em + '>' +
+      '<div class="kn">' + esc(w.number) + ' · ' + esc(truncate(w.problem, 36)) + '</div>' +
+      '<div class="ka">' + esc(w.account) + '</div>' +
+      '<div class="kf">' +
+        '<span class="badge ' + (PRI_BADGE[w.priority] || "") + '">' + esc(w.priority) + '</span>' +
+        '<span class="ko" title="' + esc(w.tech || "Unassigned") + '">' + esc(initials(w.tech)) + '</span>' +
+      '</div>' +
+    '</div>';
+  }
+  function boardHtml() {
+    var items = filtered();
+    return '<div class="kanban" id="woBoard">' + BOARD_COLS.map(function (col) {
+      var cards = items.filter(function (w) { return w.status === col.key; });
+      var total = cards.reduce(function (s, w) { return s + woValue(w); }, 0);
+      return '<div class="klist" data-status="' + col.key + '">' +
+        '<div class="kh">' +
+          '<span class="lbl">' + esc(col.label) + '</span>' +
+          '<span class="amt"><span class="kcount">' + cards.length + '</span> · <span class="ktotal">' + esc(D.fmtShort(total)) + '</span></span>' +
+        '</div>' +
+        '<div class="kb">' + cards.map(kcardHtml).join("") + '</div>' +
+      '</div>';
+    }).join("") + '</div>';
+  }
+
+  // ---- 3. List view --------------------------------------------------------
+  function listHtml() {
+    var items = filtered().slice().sort(function (a, b) {
+      return String(b.reportedAt).localeCompare(String(a.reportedAt));
+    });
+    if (!items.length) return '<div class="empty">No work orders match this filter.</div>';
+    return '<div class="table-wrap"><table class="table"><thead><tr>' +
+      '<th>WO#</th><th>Reported</th><th>Account</th><th>Type</th><th>Priority</th><th>Status</th><th>Tech</th><th>NTE</th><th>Age</th>' +
+    '</tr></thead><tbody>' +
+      items.map(function (w) {
+        var asset = w.roofAssetId != null ? D.roofAsset(w.roofAssetId) : null;
+        var priB = PRI_BADGE[w.priority];
+        var pri = priB ? '<span class="badge ' + priB + '">' + esc(w.priority) + '</span>'
+                       : '<span style="color:var(--text-soft);font-size:.8rem;">' + esc(w.priority) + '</span>';
+        var stB = STATUS_BADGE[w.status];
+        var st = stB ? '<span class="badge ' + stB + '">' + esc(STATUS_LABEL[w.status] || w.status) + '</span>'
+                     : '<span style="color:var(--text-soft);font-size:.8rem;">' + esc(STATUS_LABEL[w.status] || w.status) + '</span>';
+        return '<tr data-id="' + w.id + '" style="cursor:pointer;">' +
+          '<td class="mono" style="white-space:nowrap;">' + esc(w.number) + '</td>' +
+          '<td class="mono" style="white-space:nowrap;color:var(--text-soft);">' + esc(fmtDate(String(w.reportedAt).slice(0, 10))) + '</td>' +
+          '<td><span class="strong">' + esc(w.account) + '</span>' +
+            (asset ? '<div class="sub">' + esc(asset.building) + '</div>' : '') + '</td>' +
+          '<td><span class="badge b">' + esc(w.type) + '</span></td>' +
+          '<td>' + pri + '</td>' +
+          '<td>' + st + '</td>' +
+          '<td>' + esc(w.tech || "—") + '</td>' +
+          '<td class="mono" style="white-space:nowrap;">' + esc(w.nte != null ? D.fmt(w.nte) : "—") + '</td>' +
+          '<td class="mono" style="color:var(--text-soft);">' + ageDays(w) + 'd</td>' +
+        '</tr>';
+      }).join("") +
+    '</tbody></table></div>';
+  }
+
+  // ---- 4. Controls card ------------------------------------------------------
+  function cardHtml() {
+    return '<div class="card">' +
+      '<div class="card-head" style="flex-wrap:wrap;gap:12px;">' +
+        '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">' +
+          '<div><h3>Work orders</h3><p>Drag cards between statuses, or switch to list</p></div>' +
+          '<div style="display:flex;gap:8px;" id="viewPills">' +
+            '<span class="pill" data-view="board" role="button" tabindex="0">Board</span>' +
+            '<span class="pill" data-view="list" role="button" tabindex="0">List</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;" id="typePills">' +
+          TYPE_FILTERS.map(function (f) {
+            return '<span class="pill" data-type="' + f.key + '" role="button" tabindex="0">' + esc(f.label) + '</span>';
+          }).join("") +
+        '</div>' +
+      '</div>' +
+      '<div id="woView"></div>' +
+    '</div>';
+  }
+  function paintPills() {
+    function paint(sel, attr, active) {
+      document.querySelectorAll(sel).forEach(function (p) {
+        if (p.getAttribute(attr) === active) {
+          p.style.background = "var(--red)"; p.style.color = "#fff"; p.style.borderColor = "var(--red)";
+        } else {
+          p.style.background = ""; p.style.color = ""; p.style.borderColor = "";
+        }
+      });
+    }
+    paint("#viewPills .pill", "data-view", view);
+    paint("#typePills .pill", "data-type", typeFilter);
+  }
+  function refreshView() {
+    var box = document.getElementById("woView");
+    if (box) box.innerHTML = view === "board" ? boardHtml() : listHtml();
+  }
+
+  // ---- 5. Drag & drop (board) ---------------------------------------------
+  var dragged = null;
+  function recalc(kb) {
+    if (!kb) return;
+    var list = kb.closest(".klist");
+    if (!list) return;
+    var cards = kb.querySelectorAll(".kcard");
+    var total = 0;
+    cards.forEach(function (c) { total += Number(c.getAttribute("data-value")) || 0; });
+    list.querySelector(".kcount").textContent = cards.length;
+    list.querySelector(".ktotal").textContent = D.fmtShort(total);
+  }
+  content.addEventListener("dragstart", function (e) {
+    var card = e.target.closest(".kcard");
+    if (!card) return;
+    dragged = card;
+    card.classList.add("dragging");
+    if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", card.getAttribute("data-id")); }
+  });
+  content.addEventListener("dragend", function () {
+    if (dragged) dragged.classList.remove("dragging");
+    dragged = null;
+  });
+  content.addEventListener("dragover", function (e) {
+    if (dragged && e.target.closest(".kb")) e.preventDefault();
+  });
+  content.addEventListener("drop", function (e) {
+    var kb = e.target.closest(".kb");
+    if (!kb || !dragged) return;
+    e.preventDefault();
+    var from = dragged.parentNode;
+    if (from === kb) return;
+    kb.appendChild(dragged);
+    var status = kb.closest(".klist").getAttribute("data-status");
+    var w = D.workOrders.find(function (x) { return String(x.id) === dragged.getAttribute("data-id"); });
+    if (w) {
+      w.status = status;
+      if (status === "completed" && !w.completedAt) w.completedAt = new Date().toISOString();
+    }
+    recalc(from);
+    recalc(kb);
+    refreshStats();
+  });
+
+  // ---- 6. Detail drawer -------------------------------------------------------
+  function line(lbl, val, mono) {
+    return '<div class="field"><label>' + lbl + '</label>' +
+      '<div ' + (mono ? 'class="mono" ' : '') + 'style="color:var(--text);">' + val + '</div></div>';
+  }
+  function drawerHtml(w) {
+    var asset = w.roofAssetId != null ? D.roofAsset(w.roofAssetId) : null;
+    var ctr = w.contractId != null ? D.contract(w.contractId) : null;
+    var stB = STATUS_BADGE[w.status];
+    var priB = PRI_BADGE[w.priority];
+
+    var body = '';
+    body += line("Account", esc(w.account));
+    if (asset) {
+      body += line("Building / Section",
+        esc(asset.building + (asset.section ? " · " + asset.section : "")) +
+        (asset.accessNotes ? '<div class="sub" style="color:var(--text-soft);font-size:.8rem;margin-top:4px;">Access: ' + esc(asset.accessNotes) + '</div>' : ''));
+    }
+    body += line("Problem", esc(w.problem || "—"));
+    if (w.leakLocation) body += line("Leak Location", esc(w.leakLocation));
+    body += line("Reported", esc(fmtDateTime(w.reportedAt)));
+    body += line("Scheduled", esc(w.scheduledDate ? fmtDate(w.scheduledDate) : "—"));
+    body += '<div class="field"><label>Tech</label>' +
+      '<select id="woTech">' +
+        '<option value=""' + (!w.tech ? ' selected' : '') + '>Unassigned</option>' +
+        D.TECHS.map(function (t) {
+          return '<option value="' + esc(t.name) + '"' + (w.tech === t.name ? ' selected' : '') + '>' + esc(t.name) + '</option>';
+        }).join("") +
+      '</select></div>';
+    body += line("NTE", esc(w.nte != null ? D.fmt(w.nte) : "—"), true);
+    body += line("PO", esc(w.po || "—"));
+    if (ctr) body += line("Contract", esc(ctr.number + " · " + ctr.tier));
+    if (w.type === "Inspection" && w.deficiencies != null) {
+      body += line("Deficiencies Found", esc(String(w.deficiencies)));
+    }
+    if (w.resolution) body += line("Resolution", esc(w.resolution));
+    body += line("Photos", '📷 ' + esc(String(w.photosBefore || 0)) + ' before · ' + esc(String(w.photosAfter || 0)) + ' after');
+    body += '<div id="woCapture"></div>';
+
+    var actions = '';
+    if (w.status === "new" || w.status === "scheduled") {
+      actions = '<button class="btn red" data-act="dispatched">Dispatch</button>';
+    } else if (w.status === "dispatched") {
+      actions = '<button class="btn red" data-act="in-progress">Start Work</button>';
+    } else if (w.status === "in-progress") {
+      actions = '<button class="btn red" data-act="completed">Complete</button>';
+    } else if (w.status === "completed") {
+      actions = '<button class="btn gold" data-act="invoiced">Mark Invoiced</button>';
+    }
+
+    return '<div class="dh"><div><h3>' + esc(w.number) + '</h3>' +
+      '<p style="color:var(--text-soft);font-size:.82rem;">' + esc(w.type) + '</p></div>' +
+      '<button class="x">&times;</button></div>' +
+    '<div class="db">' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+        '<span class="badge ' + (stB || "") + '">' + esc(STATUS_LABEL[w.status] || w.status) + '</span>' +
+        '<span class="badge ' + (priB || "") + '">' + esc(w.priority) + '</span>' +
+      '</div>' +
+      body +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;" id="woActions" data-id="' + w.id + '">' + actions + '</div>' +
+    '</div>';
+  }
+  function loadCapture(w) {
+    if (!window.CAPTURE) return;
+    var key = "wo:" + w.id;
+    Promise.all([CAPTURE.listPhotos(key), CAPTURE.listNotes(key)]).then(function (res) {
+      var box = document.getElementById("woCapture");
+      if (!box) return;
+      var n = (res[0] || []).length, m = (res[1] || []).length;
+      box.innerHTML = '<div class="field"><label>Field Capture</label>' +
+        '<div style="color:var(--text);">📷 ' + n + ' photos · ' + m + ' voice notes · ' +
+        '<a href="field.html" style="color:var(--gold-2);">Open Field Mode →</a></div></div>';
+    }).catch(function () {});
+  }
+  function openWO(id) {
+    var w = D.workOrders.find(function (x) { return String(x.id) === String(id); });
+    if (!w) return;
+    window.CRM.openDrawer(drawerHtml(w));
+    loadCapture(w);
+
+    var sel = document.getElementById("woTech");
+    if (sel) sel.addEventListener("change", function () {
+      w.tech = sel.value || null;
+      refreshView();
+      paintPills();
+    });
+    var box = document.getElementById("woActions");
+    if (box) box.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      w.status = btn.getAttribute("data-act");
+      if (w.status === "completed" && !w.completedAt) w.completedAt = new Date().toISOString();
+      window.CRM.closeDrawer();
+      refreshStats();
+      refreshView();
+    });
+  }
+
+  // ---- 7. Page assembly & wiring -----------------------------------------------
+  content.innerHTML = renderStats() + cardHtml();
+  refreshView();
+  paintPills();
+
+  content.addEventListener("click", function (e) {
+    var vp = e.target.closest("#viewPills .pill");
+    if (vp) { view = vp.getAttribute("data-view"); paintPills(); refreshView(); return; }
+    var tp = e.target.closest("#typePills .pill");
+    if (tp) { typeFilter = tp.getAttribute("data-type"); paintPills(); refreshView(); return; }
+    var card = e.target.closest(".kcard");
+    if (card) { openWO(card.getAttribute("data-id")); return; }
+    var tr = e.target.closest("tr[data-id]");
+    if (tr) openWO(tr.getAttribute("data-id"));
+  });
+  content.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var p = e.target.closest(".pill");
+    if (!p) return;
+    e.preventDefault();
+    if (p.hasAttribute("data-view")) { view = p.getAttribute("data-view"); }
+    else if (p.hasAttribute("data-type")) { typeFilter = p.getAttribute("data-type"); }
+    else return;
+    paintPills(); refreshView();
+  });
+
+  document.querySelector('.topbar .title p').textContent = "Service dispatch board · " + D.source;
+});
+</script>
+<script src="js/app.js"></script>
+</body></html>

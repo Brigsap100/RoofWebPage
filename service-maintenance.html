@@ -75,6 +75,39 @@
   </div>
 </section>
 
+<section style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow red">Service Request</div>
+      <h2>Request a maintenance visit</h2>
+      <p>Tell us about your building and we'll schedule an inspection or repair visit that fits your calendar.</p>
+    </div>
+    <div class="reveal" style="max-width:760px;">
+      <form id="serviceRequestForm">
+        <div class="form-grid">
+          <div class="field"><label for="sr-name">Name</label><input id="sr-name" name="name" type="text" required placeholder="Your name"></div>
+          <div class="field"><label for="sr-company">Company</label><input id="sr-company" name="company" type="text" placeholder="Company name"></div>
+          <div class="field"><label for="sr-phone">Phone</label><input id="sr-phone" name="phone" type="tel" placeholder="(000) 000-0000"></div>
+          <div class="field"><label for="sr-email">Email</label><input id="sr-email" name="email" type="email" required placeholder="you@company.com"></div>
+          <div class="field full"><label for="sr-building">Building / address</label><input id="sr-building" name="building" type="text" placeholder="Site address or building name"></div>
+          <div class="field full"><label for="sr-urgency">Urgency</label>
+            <select id="sr-urgency" name="urgency">
+              <option>Routine — scheduled visit</option>
+              <option>Urgent — within 24 hours</option>
+              <option>Emergency — active leak</option>
+            </select>
+          </div>
+          <div class="field full"><label for="sr-message">Describe the issue</label><textarea id="sr-message" name="message" placeholder="Roof type, age, known issues, and what you need…"></textarea></div>
+          <div class="field full">
+            <button type="submit" class="btn btn-red" style="align-self:flex-start;">Request service</button>
+            <p id="serviceRequestNote" style="display:none;margin-top:14px;color:var(--gold-2);">Thanks — your service request is in. Our dispatch team will contact you shortly. Urgent? Call <a href="tel:9162531900" style="color:var(--gold-2);text-decoration:underline;">916.253.1900</a>.</p>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
 <section class="cta">
   <div class="glow"></div>
   <div class="wrap reveal">
