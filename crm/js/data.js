@@ -201,11 +201,127 @@ window.KODIAK_CRM = (function () {
     return a;
   }
 
+  // ---- Custom accounts (created on the Accounts page) -----------------
+  // Stored in localStorage as an array of account objects so they survive
+  // reloads. Appended to `accounts` on every load — before owner overrides
+  // are applied — with ids remapped upward if a live row already took one.
+  const CUSTOM_ACCOUNTS_KEY = "kodiakCrmCustomAccounts";
+  function lsList(key) {
+    try { const v = JSON.parse(lsGet(key)); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function lsSetList(key, arr) {
+    try { localStorage.setItem(key, JSON.stringify(arr)); } catch (e) {}
+  }
+  function maxAccountId(extra) {
+    let max = 0;
+    accounts.concat(extra || []).forEach((a) => {
+      const n = Number(a && a.id);
+      if (isFinite(n) && n > max) max = n;
+    });
+    return max;
+  }
+  function appendCustomAccounts() {
+    const saved = lsList(CUSTOM_ACCOUNTS_KEY);
+    let changed = false;
+    saved.forEach((a) => {
+      if (!a || a.id == null) return;
+      if (accounts.some((x) => Number(x.id) === Number(a.id))) {
+        a.id = maxAccountId() + 1;             // live row took this id → remap upward
+        changed = true;
+      }
+      accounts.push(a);
+    });
+    if (changed) lsSetList(CUSTOM_ACCOUNTS_KEY, saved);
+  }
+  function addAccount(fields) {
+    const acct = Object.assign(
+      { name:"", type:"", city:"", state:"", contact:"", title:"", phone:"", email:"", owner:"" },
+      fields, { id: maxAccountId(lsList(CUSTOM_ACCOUNTS_KEY)) + 1 }
+    );
+    if (!acct.owner) acct.owner = reps[0] || "";
+    accounts.push(acct);
+    const saved = lsList(CUSTOM_ACCOUNTS_KEY);
+    saved.push(acct);
+    lsSetList(CUSTOM_ACCOUNTS_KEY, saved);
+    return acct;
+  }
+
+  // ---- Rep (owner-name) management -------------------------------------
+  // Effective reps = (default reps − removed) + custom names. Pages hold a
+  // reference to `KODIAK_CRM.reps`, so refreshReps() mutates the array in
+  // place instead of reassigning it. Removing a rep never rewrites existing
+  // accounts' .owner values — it only leaves the list.
+  const DEFAULT_REPS = reps.slice();
+  const CUSTOM_REPS_KEY = "kodiakCrmCustomReps";
+  const REMOVED_REPS_KEY = "kodiakCrmRemovedReps";
+  const sameName = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
+  // One-time migration from the older *Owners localStorage keys.
+  [["kodiakCrmCustomOwners", CUSTOM_REPS_KEY], ["kodiakCrmRemovedOwners", REMOVED_REPS_KEY]]
+    .forEach(([oldKey, newKey]) => {
+      const old = lsList(oldKey);
+      if (old.length) {
+        const cur = lsList(newKey);
+        old.forEach((n) => { if (n && !cur.some((c) => sameName(c, n))) cur.push(n); });
+        lsSetList(newKey, cur);
+      }
+      try { localStorage.removeItem(oldKey); } catch (e) {}
+    });
+  function refreshReps() {
+    const removed = lsList(REMOVED_REPS_KEY);
+    const out = [];
+    DEFAULT_REPS.concat(lsList(CUSTOM_REPS_KEY)).forEach((n) => {
+      if (n && !removed.some((r) => sameName(r, n)) && !out.some((o) => sameName(o, n))) out.push(n);
+    });
+    reps.splice(0, reps.length, ...out);
+    return reps;
+  }
+  function addRep(name) {
+    name = String(name == null ? "" : name).trim();
+    if (!name) return reps;
+    const removed = lsList(REMOVED_REPS_KEY);
+    const ri = removed.findIndex((r) => sameName(r, name));
+    if (ri > -1) {                             // hidden built-in → un-remove, don't duplicate
+      removed.splice(ri, 1);
+      lsSetList(REMOVED_REPS_KEY, removed);
+    } else {
+      const custom = lsList(CUSTOM_REPS_KEY);
+      if (!DEFAULT_REPS.some((r) => sameName(r, name)) && !custom.some((c) => sameName(c, name))) {
+        custom.push(name);
+        lsSetList(CUSTOM_REPS_KEY, custom);
+      }
+    }
+    return refreshReps();
+  }
+  function removeRep(name) {
+    name = String(name == null ? "" : name).trim();
+    if (!name) return reps;
+    const custom = lsList(CUSTOM_REPS_KEY);
+    const ci = custom.findIndex((c) => sameName(c, name));
+    if (ci > -1) {
+      custom.splice(ci, 1);
+      lsSetList(CUSTOM_REPS_KEY, custom);
+    } else if (DEFAULT_REPS.some((r) => sameName(r, name))) {
+      const removed = lsList(REMOVED_REPS_KEY);
+      if (!removed.some((r) => sameName(r, name))) {
+        removed.push(DEFAULT_REPS.find((r) => sameName(r, name)));
+        lsSetList(REMOVED_REPS_KEY, removed);
+      }
+    }
+    return refreshReps();
+  }
+  refreshReps();                               // apply persisted add/removes at load
+  // Back-compat aliases (older pages call the *Owner names).
+  const getOwners = () => reps.slice();
+  function addOwner(name) { addRep(name); name = String(name == null ? "" : name).trim(); return name || null; }
+  const removeOwner = removeRep;
+
   let dataSource = "Demo data (local)";
   // `ready` resolves once live data has been loaded (or the fallback kept).
   const ready = (async () => {
     if (dataMode === "demo") {                 // forced offline: never call the API
       dataSource = "Demo data (forced)";
+      appendCustomAccounts();
       applyOwnerOverrides();
       return dataSource;
     }
@@ -222,6 +338,7 @@ window.KODIAK_CRM = (function () {
       emptyAll();
       dataSource = "Live mode — backend unreachable";
     }
+    appendCustomAccounts();                    // user-created accounts always show
     applyOwnerOverrides();                     // owner edits win over demo & live rows
     return dataSource;
   })();
@@ -230,6 +347,8 @@ window.KODIAK_CRM = (function () {
     STAGES, SERVICES, SYSTEMS, reps,
     accounts, opportunities, projects, estimates, activities, leads,
     fmt, fmtShort, metrics, byStage, apiGet, API_BASE, ready, setAccountOwner,
+    addAccount, addRep, removeRep, refreshReps,
+    getOwners, addOwner, removeOwner,
     get source() { return dataSource; },
     get dataMode() { return dataMode; },
     account: (id) => accounts.find(a=>a.id===id)

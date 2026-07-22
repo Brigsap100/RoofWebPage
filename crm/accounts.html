@@ -3,11 +3,39 @@
 <title>Accounts · Kodiak CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/crm.css"><link rel="icon" href="../assets/img/logo-seal.png"></head>
+<link rel="stylesheet" href="css/crm.css"><link rel="icon" href="../assets/img/logo-seal.png">
+<style>
+/* ---- Centered modals (this page) ---- */
+.modal-ov{position:fixed;inset:0;background:rgba(11,9,8,.74);display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px;
+  width:min(480px,92vw);max-height:88vh;overflow-y:auto;box-shadow:0 30px 80px -30px #000;animation:modalIn .18s ease;}
+.modal-card.sm{width:min(360px,92vw);}
+.modal-card h3{font-size:1.15rem;margin-bottom:16px;}
+.modal-form{display:flex;flex-direction:column;gap:14px;}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:480px){.modal-row{grid-template-columns:1fr;}}
+.modal-actions{display:flex;gap:10px;margin-top:18px;}
+.modal-actions .btn{flex:1;justify-content:center;}
+.modal-note{color:var(--text-soft);font-size:.8rem;margin-bottom:10px;}
+.owner-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);}
+.owner-row .rm{background:none;border:1px solid var(--line);border-radius:8px;color:var(--text-soft);
+  cursor:pointer;padding:4px 10px;font-size:.8rem;line-height:1;transition:.18s;}
+.owner-row .rm:hover{border-color:var(--bad);color:var(--bad);}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.98);}to{opacity:1;transform:none;}}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:10020;background:var(--raise);
+  border:1px solid var(--gold);color:var(--gold-2);padding:12px 22px;border-radius:40px;font-size:.88rem;
+  font-weight:600;box-shadow:0 16px 40px -14px #000;animation:modalIn .2s ease;}
+@media(max-width:760px){.topbar .btn .btn-lbl{display:none;}}
+</style></head>
 <body data-page="accounts">
 <div class="app"><aside class="sidebar" id="sidebar"></aside><div class="main">
 <header class="topbar"><div style="display:flex;align-items:center;gap:14px;"><button class="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><div class="title"><h1>Accounts</h1><p>Clients, GCs &amp; property managers</p></div></div>
-<div class="tools"><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="acctSearch" placeholder="Search…"></div><div class="avatar">BN</div></div></header>
+<div class="tools">
+  <button class="btn ghost" id="manageOwnersBtn" title="Manage owners"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg><span class="btn-lbl">Owners</span></button>
+  <button class="btn red" id="newAccountBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="btn-lbl">New Account</span></button>
+  <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="acctSearch" placeholder="Search…"></div>
+  <div class="avatar">BN</div>
+</div></header>
 <main class="content" id="content"></main></div></div>
 <script src="js/data.js"></script>
 <script>
@@ -16,7 +44,155 @@ KODIAK_CRM.ready.then(function () {
   var esc = (window.CRM && window.CRM.esc) || function (s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
       return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
-  var TYPES = ["Owner", "General Contractor", "Property Manager"];
+  var TYPES = ["Owner", "Property Manager", "General Contractor"];
+
+  // ---- Rep (owner) list adapter --------------------------------------
+  // Preferred contract: D.reps is always the effective list, mutated in
+  // place by D.addRep(name) / D.removeRep(name). Falls back to the older
+  // getOwners/addOwner/removeOwner API if addRep hasn't landed yet.
+  function repList() {
+    if (typeof D.addRep === "function") return (D.reps || []).slice();
+    if (typeof D.getOwners === "function") return D.getOwners();
+    return (D.reps || []).slice();
+  }
+  function repAdd(name) {
+    if (typeof D.addRep === "function") return D.addRep(name);
+    if (typeof D.addOwner === "function") return D.addOwner(name);
+  }
+  function repRemove(name) {
+    if (typeof D.removeRep === "function") return D.removeRep(name);
+    if (typeof D.removeOwner === "function") return D.removeOwner(name);
+  }
+
+  // ---- Centered overlay layers ---------------------------------------
+  // Two layers so the small owner popups can stack ON TOP of the
+  // new-account modal (or the drawer) without destroying its state.
+  // Both close on backdrop click and on Escape (topmost first).
+  function openLayer(id, z, html, small, onDismiss) {
+    closeLayer(id);
+    var ov = document.createElement("div");
+    ov.id = id;
+    ov.className = "modal-ov";
+    ov.style.zIndex = z;
+    ov.__onDismiss = onDismiss || null;
+    ov.innerHTML = '<div class="modal-card' + (small ? ' sm' : '') + '">' + html + '</div>';
+    ov.addEventListener("click", function (e) { if (e.target === ov) dismissLayer(id); });
+    document.body.appendChild(ov);
+    return ov;
+  }
+  function closeLayer(id) {
+    var ov = document.getElementById(id);
+    if (ov) ov.remove();
+  }
+  function dismissLayer(id) {   // close + run the cancel callback
+    var ov = document.getElementById(id);
+    if (!ov) return;
+    var cb = ov.__onDismiss;
+    ov.remove();
+    if (cb) cb();
+  }
+  function openModal(html, onDismiss) { return openLayer("crmModal", 10000, html, false, onDismiss); }
+  function openPopup(html, onDismiss) { return openLayer("crmPopup", 10010, html, true, onDismiss); }
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (document.getElementById("crmPopup")) dismissLayer("crmPopup");
+    else if (document.getElementById("crmModal")) dismissLayer("crmModal");
+  });
+
+  function toast(msg) {
+    var old = document.getElementById("crmToast");
+    if (old) old.remove();
+    var t = document.createElement("div");
+    t.id = "crmToast";
+    t.className = "toast";
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 2400);
+  }
+
+  // ---- Owner selects (single source: repList()) -----------------------
+  function ownerOptionsHtml(selected) {
+    var names = repList();
+    // Keep an in-use name visible even if it was removed from the list.
+    if (selected && names.indexOf(selected) === -1) names = names.concat([selected]);
+    return names.map(function (n) {
+      return '<option' + (n === selected ? ' selected' : '') + '>' + esc(n) + '</option>';
+    }).join("") + '<option value="__custom__">Custom&hellip;</option>';
+  }
+  function wireOwnerSelect(sel) {
+    sel.dataset.prev = sel.value;
+    sel.addEventListener("change", function () {
+      if (sel.value === "__custom__") openCustomOwnerPopup(sel);
+      else sel.dataset.prev = sel.value;
+    });
+  }
+  // Rebuild every owner select; `chosen` (if given) becomes activeSel's value.
+  function refreshOwnerSelects(activeSel, chosen) {
+    document.querySelectorAll("select.owner-select").forEach(function (s) {
+      var keep = (s === activeSel && chosen) ? chosen : (s.dataset.prev || s.value);
+      s.innerHTML = ownerOptionsHtml(keep);
+      s.value = keep;
+      s.dataset.prev = keep;
+    });
+  }
+  // Effective owner value of a wired select ("Custom…" never leaks through).
+  function ownerValue(sel) {
+    return sel.value === "__custom__" ? (sel.dataset.prev || "") : sel.value;
+  }
+
+  // Small centered popup: single name input + Add / Cancel. On Add the
+  // name is persisted via repAdd and selected in the triggering select.
+  function openCustomOwnerPopup(sel) {
+    function restore() { if (sel) sel.value = sel.dataset.prev || ""; }
+    var ov = openPopup(
+      '<h3>New owner name</h3>' +
+      '<div class="field"><input id="newOwnerName" placeholder="Full name"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn red" id="ownerAddBtn">Add</button>' +
+        '<button class="btn ghost" id="ownerCancelBtn">Cancel</button>' +
+      '</div>',
+      restore
+    );
+    var input = ov.querySelector("#newOwnerName");
+    input.focus();
+    function add() {
+      var name = input.value.trim();
+      if (!name) { input.focus(); return; }
+      repAdd(name);
+      closeLayer("crmPopup");
+      refreshOwnerSelects(sel, name);
+    }
+    ov.querySelector("#ownerAddBtn").addEventListener("click", add);
+    ov.querySelector("#ownerCancelBtn").addEventListener("click", function () { dismissLayer("crmPopup"); });
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") add(); });
+  }
+
+  // Centered popup listing every effective rep with an × per name.
+  function openManageOwnersPopup() {
+    var ov = openPopup(
+      '<h3>Manage owners</h3>' +
+      '<div class="modal-note">Removing a name only takes it off this list &mdash; existing accounts keep their assigned owner.</div>' +
+      '<div id="ownerList" style="max-height:280px;overflow-y:auto;"></div>' +
+      '<div class="modal-actions"><button class="btn ghost" id="mgrDoneBtn">Done</button></div>',
+      refreshOwnerSelects   // keep any open modal/drawer selects in sync on backdrop/Esc close
+    );
+    function renderList() {
+      var names = repList();
+      ov.querySelector("#ownerList").innerHTML = names.length ? names.map(function (n) {
+        return '<div class="owner-row"><span>' + esc(n) + '</span>' +
+          '<button class="rm" data-name="' + esc(n) + '" title="Remove ' + esc(n) + '">&#10005;</button></div>';
+      }).join("") : '<div class="empty" style="padding:24px;">No owners in the list.</div>';
+      ov.querySelectorAll(".rm").forEach(function (b) {
+        b.addEventListener("click", function () {
+          repRemove(b.getAttribute("data-name"));
+          renderList();
+          refreshOwnerSelects();
+        });
+      });
+    }
+    renderList();
+    ov.querySelector("#mgrDoneBtn").addEventListener("click", function () { dismissLayer("crmPopup"); });
+  }
 
   // Owner cell markup — pencil hint signals the owner is editable (row click opens the drawer).
   function ownerCell(a) {
@@ -29,7 +205,7 @@ KODIAK_CRM.ready.then(function () {
     if (td) td.innerHTML = ownerCell(a);
   }
 
-  // ---- Build the main card + table ----------------------------------
+  // ---- Build the main card + table ------------------------------------
   function render() {
     var rows = D.accounts.map(function (a) {
       return '<tr data-id="' + a.id + '" data-search="' +
@@ -48,7 +224,6 @@ KODIAK_CRM.ready.then(function () {
       '<div class="card">' +
         '<div class="card-head">' +
           '<div><h3>All Accounts</h3><p>' + D.accounts.length + ' active relationships</p></div>' +
-          '<button class="btn red" id="newAccount">+ New Account</button>' +
         '</div>' +
         '<div class="table-wrap"><table class="table"><thead><tr>' +
           '<th>Account</th><th>Primary Contact</th><th>Location</th>' +
@@ -56,35 +231,73 @@ KODIAK_CRM.ready.then(function () {
         '</tr></thead><tbody id="acctRows">' + rows + '</tbody></table></div>' +
       '</div>';
 
-    document.getElementById("newAccount").addEventListener("click", openNewAccount);
     document.querySelectorAll("#acctRows tr").forEach(function (tr) {
       tr.addEventListener("click", function () { openAccount(+tr.getAttribute("data-id")); });
     });
   }
 
-  // ---- New Account form (demo) --------------------------------------
+  // ---- New Account (centered modal) ------------------------------------
   function openNewAccount() {
     var typeOpts = TYPES.map(function (t) { return '<option>' + esc(t) + '</option>'; }).join("");
-    var repOpts = D.reps.map(function (r) { return '<option>' + esc(r) + '</option>'; }).join("");
-    CRM.openDrawer(
-      '<div class="dh"><h3>New Account</h3><button class="x">&times;</button></div>' +
-      '<div class="db">' +
-        '<div class="field"><label>Name</label><input placeholder="Account name"></div>' +
-        '<div class="field"><label>Type</label><select>' + typeOpts + '</select></div>' +
-        '<div class="field"><label>Contact</label><input placeholder="Primary contact"></div>' +
-        '<div class="field"><label>Title</label><input placeholder="Title"></div>' +
-        '<div class="field"><label>City</label><input placeholder="City"></div>' +
-        '<div class="field"><label>State</label><input placeholder="State"></div>' +
-        '<div class="field"><label>Phone</label><input placeholder="Phone"></div>' +
-        '<div class="field"><label>Email</label><input placeholder="Email"></div>' +
-        '<div class="field"><label>Owner</label><select>' + repOpts + '</select></div>' +
-        '<button class="btn red" id="saveAccount" style="justify-content:center;">Save Account</button>' +
+    var ov = openModal(
+      '<h3>New Account</h3>' +
+      '<div class="modal-form">' +
+        '<div class="field"><label>Account Name *</label><input id="naName" placeholder="Account name"></div>' +
+        '<div class="modal-row">' +
+          '<div class="field"><label>Type</label><select id="naType">' + typeOpts + '</select></div>' +
+          '<div class="field"><label>Owner</label>' +
+            '<select id="naOwner" class="owner-select">' + ownerOptionsHtml(repList()[0] || "") + '</select></div>' +
+        '</div>' +
+        '<div class="modal-row">' +
+          '<div class="field"><label>City</label><input id="naCity" placeholder="City"></div>' +
+          '<div class="field"><label>State</label><input id="naState" placeholder="CA, NV, &hellip;"></div>' +
+        '</div>' +
+        '<div class="modal-row">' +
+          '<div class="field"><label>Contact Name</label><input id="naContact" placeholder="Primary contact"></div>' +
+          '<div class="field"><label>Contact Title</label><input id="naTitle" placeholder="Title"></div>' +
+        '</div>' +
+        '<div class="modal-row">' +
+          '<div class="field"><label>Phone</label><input id="naPhone" placeholder="Phone"></div>' +
+          '<div class="field"><label>Email</label><input id="naEmail" placeholder="Email"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div id="naErr" style="display:none;color:var(--bad);font-size:.82rem;margin-top:10px;">Account name is required.</div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn red" id="naAdd">Add Account</button>' +
+        '<button class="btn ghost" id="naCancel">Cancel</button>' +
       '</div>'
     );
-    document.getElementById("saveAccount").addEventListener("click", function () { CRM.closeDrawer(); });
+    var ownerSel = ov.querySelector("#naOwner");
+    wireOwnerSelect(ownerSel);
+    ov.querySelector("#naName").focus();
+    ov.querySelector("#naCancel").addEventListener("click", function () { dismissLayer("crmModal"); });
+    ov.querySelector("#naAdd").addEventListener("click", function () {
+      var val = function (id) { return ov.querySelector("#" + id).value.trim(); };
+      var name = val("naName");
+      if (!name) {
+        ov.querySelector("#naErr").style.display = "";
+        ov.querySelector("#naName").focus();
+        return;
+      }
+      var acct = D.addAccount({
+        name: name,
+        type: ov.querySelector("#naType").value,
+        city: val("naCity"),
+        state: val("naState"),
+        contact: val("naContact"),
+        title: val("naTitle"),
+        phone: val("naPhone"),
+        email: val("naEmail"),
+        owner: ownerValue(ownerSel)
+      });
+      closeLayer("crmModal");
+      render();          // new row + updated count appear immediately
+      applyFilter();
+      toast('Account "' + (acct && acct.name || name) + '" added');
+    });
   }
 
-  // ---- Account detail drawer ----------------------------------------
+  // ---- Account detail drawer -------------------------------------------
   function openAccount(id) {
     var a = D.account(id);
     if (!a) return;
@@ -102,15 +315,6 @@ KODIAK_CRM.ready.then(function () {
       return '<div class="field"><label>' + lbl + '</label><div style="color:var(--text);">' + esc(val) + '</div></div>';
     }
 
-    // Owner select = reps + any custom names already in use + "Custom…" (reveals a text input).
-    var ownerNames = D.reps.slice();
-    D.accounts.forEach(function (x) {
-      if (x.owner && ownerNames.indexOf(x.owner) === -1) ownerNames.push(x.owner);
-    });
-    var ownerOpts = ownerNames.map(function (n) {
-      return '<option' + (n === a.owner ? ' selected' : '') + '>' + esc(n) + '</option>';
-    }).join("") + '<option value="__custom__">Custom…</option>';
-
     CRM.openDrawer(
       '<div class="dh"><div><h3>' + esc(a.name) + '</h3>' +
         '<p style="color:var(--text-soft);font-size:.82rem;">' + esc(a.type) + '</p></div>' +
@@ -121,8 +325,7 @@ KODIAK_CRM.ready.then(function () {
         line("Phone", a.phone) +
         line("Email", a.email) +
         '<div class="field"><label>Account Owner</label>' +
-          '<select id="ownerSelect">' + ownerOpts + '</select>' +
-          '<input id="ownerCustom" placeholder="Custom owner name" style="display:none;margin-top:8px;">' +
+          '<select id="ownerSelect" class="owner-select">' + ownerOptionsHtml(a.owner) + '</select>' +
         '</div>' +
         '<button class="btn ghost" id="saveOwner" style="justify-content:center;">Save Owner</button>' +
         '<div id="ownerMsg" style="display:none;color:var(--gold-2);font-size:.82rem;text-align:center;margin-top:8px;">Owner updated &#10003;</div>' +
@@ -133,15 +336,10 @@ KODIAK_CRM.ready.then(function () {
     );
 
     var sel = document.getElementById("ownerSelect");
-    var custom = document.getElementById("ownerCustom");
-    sel.addEventListener("change", function () {
-      var isCustom = sel.value === "__custom__";
-      custom.style.display = isCustom ? "" : "none";
-      if (isCustom) custom.focus();
-    });
+    wireOwnerSelect(sel);   // "Custom…" opens the centered popup on top of the drawer
     document.getElementById("saveOwner").addEventListener("click", function () {
-      var name = sel.value === "__custom__" ? custom.value.trim() : sel.value;
-      if (!name) { custom.focus(); return; }
+      var name = ownerValue(sel);
+      if (!name) { sel.focus(); return; }
       D.setAccountOwner(a.id, name);
       refreshOwnerCell(a);
       var msg = document.getElementById("ownerMsg");
@@ -150,19 +348,21 @@ KODIAK_CRM.ready.then(function () {
     });
   }
 
-  // ---- Topbar search -------------------------------------------------
-  function wireSearch() {
-    var input = document.getElementById("acctSearch");
-    input.addEventListener("input", function () {
-      var q = input.value.trim().toLowerCase();
-      document.querySelectorAll("#acctRows tr").forEach(function (tr) {
-        tr.style.display = tr.getAttribute("data-search").indexOf(q) > -1 ? "" : "none";
-      });
+  // ---- Topbar search ---------------------------------------------------
+  function applyFilter() {
+    var q = document.getElementById("acctSearch").value.trim().toLowerCase();
+    document.querySelectorAll("#acctRows tr").forEach(function (tr) {
+      tr.style.display = tr.getAttribute("data-search").indexOf(q) > -1 ? "" : "none";
     });
   }
 
   window.openAccount = openAccount;
-  function init() { render(); wireSearch(); }
+  function init() {
+    render();
+    document.getElementById("acctSearch").addEventListener("input", applyFilter);
+    document.getElementById("newAccountBtn").addEventListener("click", openNewAccount);
+    document.getElementById("manageOwnersBtn").addEventListener("click", openManageOwnersPopup);
+  }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
