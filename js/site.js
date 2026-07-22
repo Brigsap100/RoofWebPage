@@ -25,9 +25,14 @@
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
 
-  // Animated counters (elements with data-count)
+  // Animated counters (elements with data-count).
+  // Progressive enhancement: the real final value is in the HTML, so with no
+  // JS / no IntersectionObserver / reduced motion the number is still correct.
+  // The count-up only starts (from 0) once the element is actually in view.
   var counters = document.querySelectorAll('[data-count]');
-  if (counters.length) {
+  var reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (counters.length && 'IntersectionObserver' in window && !reduceMotion) {
     var cio = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         if (!e.isIntersecting) return;
