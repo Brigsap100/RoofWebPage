@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payroll &amp; Pay Stubs | Kodiak Roofing &amp; Waterproofing</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/site.css">
+<link rel="icon" href="../assets/img/logo-seal.png">
+<style>
+  .hr-wrap{max-width:1080px;margin:0 auto;padding:140px 32px 80px;}
+  .hr-banner{text-align:center;margin-bottom:50px;}
+  .hr-banner h1{font-size:clamp(2rem,5vw,3.2rem);margin:12px 0 10px;}
+  .hr-banner p{color:var(--text-soft);max-width:60ch;margin:0 auto;}
+  .hr-sec{margin-top:56px;}
+  .hr-sec > h2{font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:8px;}
+  .hr-sec > .lead{color:var(--text-soft);margin-bottom:26px;max-width:70ch;}
+  .b-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .b-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;}
+  .b-card h3{font-size:1.18rem;margin-bottom:10px;}
+  .b-card p{color:var(--text-soft);font-size:.93rem;margin-bottom:10px;}
+  .b-card ol,.b-card ul{margin-top:8px;padding-left:20px;}
+  .b-card li{color:var(--text-soft);font-size:.9rem;margin-bottom:7px;}
+  .hr-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.92rem;}
+  .hr-table th,.hr-table td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line);}
+  .hr-table th{background:var(--bg-2);text-transform:uppercase;letter-spacing:1.2px;font-size:.72rem;color:var(--gold-2);font-weight:600;}
+  .hr-table td{color:var(--text-soft);}
+  .hr-table td:first-child{color:var(--text);font-weight:500;}
+  .hr-table tr:last-child td{border-bottom:none;}
+  .table-scroll{overflow-x:auto;}
+  .hr-note{margin-top:48px;text-align:center;color:var(--muted,#726356);font-size:.85rem;}
+  @media(max-width:860px){.b-grid{grid-template-columns:1fr;}}
+  /* passcode gate (reuses CRM look) */
+  .gate{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 40%,#1d1615,#0b0908);display:flex;align-items:center;justify-content:center;}
+  .gate .box{background:#1a1413;border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:40px;width:min(400px,90vw);text-align:center;}
+  .gate img{width:96px;margin:0 auto 18px;}
+  .gate h2{font-size:1.5rem;margin-bottom:6px;}
+  .gate p{color:var(--text-soft);font-size:.9rem;margin-bottom:22px;}
+  .gate input{width:100%;background:#12100f;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:14px 16px;color:#fff;font-size:1rem;text-align:center;letter-spacing:3px;margin-bottom:14px;}
+  .gate input:focus{outline:none;border-color:var(--gold);}
+  .gate .err{color:#d15b5b;font-size:.85rem;height:18px;margin-bottom:8px;}
+</style>
+</head>
+<body style="background:var(--bg,#141010);">
+
+<header class="site scrolled" id="hdr" style="position:fixed;">
+  <div class="wrap">
+    <a href="../index.html" class="brand"><img src="../assets/img/logo.png" alt="Kodiak Roofing & Waterproofing"></a>
+    <nav class="main">
+      <a class="nl" href="index.html">← Portal home</a>
+      <a class="nl" href="../index.html">Back to website</a>
+      <a class="btn btn-red" href="../crm/">Open CRM</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hr-wrap">
+  <div class="hr-banner">
+    <div class="eyebrow red">Employee Portal</div>
+    <h1>Payroll &amp; Pay Stubs</h1>
+    <p>Everything about getting paid at Kodiak — the pay schedule, how to pull your stubs and W-2s, direct deposit, and who to call when something looks off.</p>
+  </div>
+
+  <div class="hr-sec">
+    <h2>Pay Schedule</h2>
+    <p class="lead">Kodiak pays bi-weekly (every other Friday), 26 pay periods a year. Each check covers the two-week period ending the Sunday before payday. Timecards are due Monday at 10:00 AM. If a payday lands on a holiday, funds deposit the prior business day.</p>
+    <div class="table-scroll">
+      <table class="hr-table">
+        <thead>
+          <tr>
+            <th>Pay Period</th>
+            <th>Work Period Ends</th>
+            <th>Payday</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>#1</td><td>Jan 4, 2026</td><td>Jan 9, 2026</td></tr>
+          <tr><td>#2</td><td>Jan 18, 2026</td><td>Jan 23, 2026</td></tr>
+          <tr><td>#3</td><td>Feb 1, 2026</td><td>Feb 6, 2026</td></tr>
+          <tr><td>#4</td><td>Feb 15, 2026</td><td>Feb 20, 2026</td></tr>
+          <tr><td>#5</td><td>Mar 1, 2026</td><td>Mar 6, 2026</td></tr>
+          <tr><td>#6</td><td>Mar 15, 2026</td><td>Mar 20, 2026</td></tr>
+          <tr><td>#7</td><td>Mar 29, 2026</td><td>Apr 3, 2026</td></tr>
+          <tr><td>#8</td><td>Apr 12, 2026</td><td>Apr 17, 2026</td></tr>
+          <tr><td>#9</td><td>Apr 26, 2026</td><td>May 1, 2026</td></tr>
+          <tr><td>#10</td><td>May 10, 2026</td><td>May 15, 2026</td></tr>
+          <tr><td>#11</td><td>May 24, 2026</td><td>May 29, 2026</td></tr>
+          <tr><td>#12</td><td>Jun 7, 2026</td><td>Jun 12, 2026</td></tr>
+          <tr><td>#13</td><td>Jun 21, 2026</td><td>Jun 26, 2026</td></tr>
+          <tr><td>#14</td><td>Jul 5, 2026</td><td>Jul 10, 2026</td></tr>
+          <tr><td>#15</td><td>Jul 19, 2026</td><td>Jul 24, 2026</td></tr>
+          <tr><td>#16</td><td>Aug 2, 2026</td><td>Aug 7, 2026</td></tr>
+          <tr><td>#17</td><td>Aug 16, 2026</td><td>Aug 21, 2026</td></tr>
+          <tr><td>#18</td><td>Aug 30, 2026</td><td>Sep 4, 2026</td></tr>
+          <tr><td>#19</td><td>Sep 13, 2026</td><td>Sep 18, 2026</td></tr>
+          <tr><td>#20</td><td>Sep 27, 2026</td><td>Oct 2, 2026</td></tr>
+          <tr><td>#21</td><td>Oct 11, 2026</td><td>Oct 16, 2026</td></tr>
+          <tr><td>#22</td><td>Oct 25, 2026</td><td>Oct 30, 2026</td></tr>
+          <tr><td>#23</td><td>Nov 8, 2026</td><td>Nov 13, 2026</td></tr>
+          <tr><td>#24</td><td>Nov 22, 2026</td><td>Nov 27, 2026</td></tr>
+          <tr><td>#25</td><td>Dec 6, 2026</td><td>Dec 11, 2026</td></tr>
+          <tr><td>#26</td><td>Dec 20, 2026</td><td>Dec 24, 2026*</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lead" style="margin-top:14px;font-size:.85rem;">*Deposits early ahead of the Christmas holiday.</p>
+  </div>
+
+  <div class="hr-sec">
+    <h2>How To Access Your Documents</h2>
+    <div class="b-grid">
+      <div class="b-card">
+        <h3>Pay Stubs</h3>
+        <p>Stubs post to the ADP Workforce Now employee portal by the Wednesday before each payday.</p>
+        <ol>
+          <li>Sign in at workforcenow.adp.com</li>
+          <li>Go to Myself → Pay → Pay Statements</li>
+          <li>View or download any stub as PDF</li>
+        </ol>
+      </div>
+      <div class="b-card">
+        <h3>W-2s &amp; Tax Forms</h3>
+        <p>Annual W-2s are available online by January 31 and mailed to your address on file.</p>
+        <ol>
+          <li>Myself → Pay → Tax Statements</li>
+          <li>Opt in to paperless for earliest access</li>
+          <li>Prior years stay available for 3 years</li>
+        </ol>
+      </div>
+      <div class="b-card">
+        <h3>First-Time Login</h3>
+        <p>Haven't set up ADP yet? You'll need the company registration code.</p>
+        <ol>
+          <li>Click "Create Account" on the ADP login</li>
+          <li>Registration code: <b>Kodiak-2026</b></li>
+          <li>Verify with your SSN and date of hire</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="hr-sec">
+    <h2>Direct Deposit</h2>
+    <p class="lead">Direct deposit is standard for all employees. You can split pay across up to three accounts. Changes take effect the pay period after they're verified (allow one cycle for pre-note).</p>
+    <div class="b-grid">
+      <div class="b-card">
+        <h3>Set Up or Change</h3>
+        <ol>
+          <li>ADP → Myself → Pay → Payment Options</li>
+          <li>Add your bank routing and account numbers</li>
+          <li>Choose amount, percentage, or remainder per account</li>
+          <li>Save — a voided-check upload speeds verification</li>
+        </ol>
+      </div>
+      <div class="b-card">
+        <h3>Good To Know</h3>
+        <ul>
+          <li>New accounts pre-note for one cycle</li>
+          <li>During pre-note you'll get a paper check</li>
+          <li>Update ASAP after switching banks</li>
+          <li>Pay cards available on request</li>
+        </ul>
+      </div>
+      <div class="b-card">
+        <h3>Timecard Reminders</h3>
+        <ul>
+          <li>Field crews clock in/out in the ADP mobile app</li>
+          <li>Approve your timecard by Monday 10:00 AM</li>
+          <li>Foremen approve crew hours by Monday noon</li>
+          <li>Missed punches: notify your foreman same day</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="hr-sec">
+    <h2>Payroll Contacts</h2>
+    <p class="lead">Questions about a check, a deduction, or a tax form? Reach the payroll team directly.</p>
+    <div class="b-grid">
+      <div class="b-card">
+        <h3>Payroll Administrator</h3>
+        <p>Diane Okafor</p>
+        <p><a href="mailto:payroll@kodiakroofing.com" style="color:var(--gold-2);">payroll@kodiakroofing.com</a><br>
+        <a href="tel:+15035550190" style="color:var(--gold-2);">(503) 555-0190</a></p>
+      </div>
+      <div class="b-card">
+        <h3>Timecard &amp; Hours</h3>
+        <p>Talk to your foreman first for punch corrections; escalate to payroll if unresolved by the Monday deadline.</p>
+      </div>
+      <div class="b-card">
+        <h3>General HR</h3>
+        <p><a href="mailto:hr@kodiakroofing.com" style="color:var(--gold-2);">hr@kodiakroofing.com</a></p>
+        <p>Mon–Fri, 7:00 AM – 4:00 PM PT</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="hr-note">Internal use only · For help contact HR.</p>
+</div>
+
+<script>
+  // Same simple passcode gate as the CRM (shared session key)
+  (function () {
+    var PASS = "kodiak2027";
+    if (sessionStorage.getItem("kodiakCrmAuth") === "1") return;
+    var g = document.createElement("div");
+    g.className = "gate";
+    g.innerHTML = '<div class="box"><img src="../assets/img/logo-seal.png" alt="Kodiak">' +
+      '<h2>Employee Portal</h2><p>Internal access only. Enter the team passcode.</p>' +
+      '<div class="err" id="gErr"></div><input id="gIn" type="password" placeholder="Passcode" autocomplete="off">' +
+      '<button class="btn btn-red" id="gBtn" style="width:100%;justify-content:center;">Enter Portal</button></div>';
+    document.body.appendChild(g);
+    document.body.style.overflow = "hidden";
+    var inp = g.querySelector("#gIn"), err = g.querySelector("#gErr");
+    inp.focus();
+    function go(){ if (inp.value.trim()===PASS){ sessionStorage.setItem("kodiakCrmAuth","1"); g.remove(); document.body.style.overflow=""; } else { err.textContent="Incorrect passcode."; inp.value=""; inp.focus(); } }
+    g.querySelector("#gBtn").addEventListener("click", go);
+    inp.addEventListener("keydown", function(e){ if(e.key==="Enter") go(); });
+  })();
+</script>
+</body>
+</html>

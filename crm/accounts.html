@@ -13,7 +13,9 @@
 <script>
 KODIAK_CRM.ready.then(function () {
   var D = window.KODIAK_CRM;
-  var esc = CRM.esc;
+  var esc = (window.CRM && window.CRM.esc) || function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
   var TYPES = ["Owner", "General Contractor", "Property Manager"];
 
   // ---- Build the main card + table ----------------------------------

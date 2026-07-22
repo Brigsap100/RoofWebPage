@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Off (PTO) | Kodiak Roofing &amp; Waterproofing</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/site.css">
+<link rel="icon" href="../assets/img/logo-seal.png">
+<style>
+  .hr-wrap{max-width:1080px;margin:0 auto;padding:140px 32px 80px;}
+  .hr-banner{text-align:center;margin-bottom:50px;}
+  .hr-banner h1{font-size:clamp(2rem,5vw,3.2rem);margin:12px 0 10px;}
+  .hr-banner p{color:var(--text-soft);max-width:60ch;margin:0 auto;}
+  .hr-sec{margin-top:56px;}
+  .hr-sec > h2{font-size:clamp(1.6rem,3.4vw,2.3rem);margin-bottom:8px;}
+  .hr-sec > .lead{color:var(--text-soft);margin-bottom:26px;max-width:70ch;}
+  .b-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+  .b-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;}
+  .b-card h3{font-size:1.18rem;margin-bottom:10px;}
+  .b-card p{color:var(--text-soft);font-size:.93rem;margin-bottom:10px;}
+  .b-card ol,.b-card ul{margin-top:8px;padding-left:20px;}
+  .b-card li{color:var(--text-soft);font-size:.9rem;margin-bottom:7px;}
+  .holiday-list{list-style:none;columns:2;column-gap:40px;}
+  .holiday-list li{padding:9px 0 9px 20px;position:relative;border-bottom:1px solid var(--line);color:var(--text-soft);font-size:.93rem;break-inside:avoid;}
+  .holiday-list li::before{content:'★';position:absolute;left:0;color:var(--gold-2);font-size:.8rem;}
+  .holiday-list li b{color:var(--text);font-weight:500;}
+  .hr-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.92rem;}
+  .hr-table th,.hr-table td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line);}
+  .hr-table th{background:var(--bg-2);text-transform:uppercase;letter-spacing:1.2px;font-size:.72rem;color:var(--gold-2);font-weight:600;}
+  .hr-table td{color:var(--text-soft);}
+  .hr-table td:first-child{color:var(--text);font-weight:500;}
+  .hr-table tr:last-child td{border-bottom:none;}
+  .table-scroll{overflow-x:auto;}
+  .pto-form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:34px;}
+  .form-msg{background:rgba(198,161,91,.14);border:1px solid var(--gold);border-radius:12px;padding:16px 18px;color:var(--gold-2);font-weight:500;margin-bottom:22px;display:none;}
+  .form-msg.show{display:block;}
+  .pto-form .btn{margin-top:6px;}
+  .hr-note{margin-top:48px;text-align:center;color:var(--muted,#726356);font-size:.85rem;}
+  @media(max-width:860px){.b-grid{grid-template-columns:1fr;}.holiday-list{columns:1;}}
+  /* passcode gate (reuses CRM look) */
+  .gate{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 40%,#1d1615,#0b0908);display:flex;align-items:center;justify-content:center;}
+  .gate .box{background:#1a1413;border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:40px;width:min(400px,90vw);text-align:center;}
+  .gate img{width:96px;margin:0 auto 18px;}
+  .gate h2{font-size:1.5rem;margin-bottom:6px;}
+  .gate p{color:var(--text-soft);font-size:.9rem;margin-bottom:22px;}
+  .gate input{width:100%;background:#12100f;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:14px 16px;color:#fff;font-size:1rem;text-align:center;letter-spacing:3px;margin-bottom:14px;}
+  .gate input:focus{outline:none;border-color:var(--gold);}
+  .gate .err{color:#d15b5b;font-size:.85rem;height:18px;margin-bottom:8px;}
+</style>
+</head>
+<body style="background:var(--bg,#141010);">
+
+<header class="site scrolled" id="hdr" style="position:fixed;">
+  <div class="wrap">
+    <a href="../index.html" class="brand"><img src="../assets/img/logo.png" alt="Kodiak Roofing & Waterproofing"></a>
+    <nav class="main">
+      <a class="nl" href="index.html">← Portal home</a>
+      <a class="nl" href="../index.html">Back to website</a>
+      <a class="btn btn-red" href="../crm/">Open CRM</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hr-wrap">
+  <div class="hr-banner">
+    <div class="eyebrow red">Employee Portal</div>
+    <h1>Time Off (PTO)</h1>
+    <p>How paid time off accrues, the 2026 holiday schedule, and how to request the days you need. Submit requests at least two weeks ahead when you can.</p>
+  </div>
+
+  <div class="hr-sec">
+    <h2>Accrual Policy</h2>
+    <p class="lead">Full-time employees accrue paid time off each pay period based on years of service. PTO covers vacation and personal days; sick leave accrues separately per state law. Up to 40 hours of unused PTO carries into the next year.</p>
+    <div class="table-scroll">
+      <table class="hr-table">
+        <thead>
+          <tr>
+            <th>Years of Service</th>
+            <th>Accrual / Pay Period</th>
+            <th>Annual PTO</th>
+            <th>Max Carryover</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0–1 years</td><td>3.08 hrs</td><td>80 hrs (10 days)</td><td>40 hrs</td></tr>
+          <tr><td>2–4 years</td><td>4.62 hrs</td><td>120 hrs (15 days)</td><td>40 hrs</td></tr>
+          <tr><td>5–9 years</td><td>6.15 hrs</td><td>160 hrs (20 days)</td><td>40 hrs</td></tr>
+          <tr><td>10+ years</td><td>7.69 hrs</td><td>200 hrs (25 days)</td><td>40 hrs</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="hr-sec">
+    <h2>2026 Company Holidays</h2>
+    <p class="lead">Kodiak observes 10 paid holidays. When a holiday falls on a weekend, it is observed on the nearest weekday. Field crews on active emergency work may be scheduled with holiday pay.</p>
+    <ul class="holiday-list">
+      <li><b>New Year's Day</b> — Thu, Jan 1</li>
+      <li><b>Martin Luther King Jr. Day</b> — Mon, Jan 19</li>
+      <li><b>Presidents' Day</b> — Mon, Feb 16</li>
+      <li><b>Memorial Day</b> — Mon, May 25</li>
+      <li><b>Juneteenth</b> — Fri, Jun 19</li>
+      <li><b>Independence Day</b> — Fri, Jul 3 (observed)</li>
+      <li><b>Labor Day</b> — Mon, Sep 7</li>
+      <li><b>Thanksgiving Day</b> — Thu, Nov 26</li>
+      <li><b>Day After Thanksgiving</b> — Fri, Nov 27</li>
+      <li><b>Christmas Day</b> — Fri, Dec 25</li>
+    </ul>
+  </div>
+
+  <div class="hr-sec">
+    <h2>How To Request Time Off</h2>
+    <div class="b-grid">
+      <div class="b-card">
+        <h3>The Process</h3>
+        <ol>
+          <li>Submit your request below (or in ADP) at least 2 weeks ahead</li>
+          <li>Your foreman or manager reviews for crew coverage</li>
+          <li>You'll get an approval notice by email</li>
+          <li>Approved time posts to your ADP balance</li>
+        </ol>
+      </div>
+      <div class="b-card">
+        <h3>Good To Know</h3>
+        <ul>
+          <li>Sick leave doesn't need advance notice — notify your foreman ASAP</li>
+          <li>Blackout periods may apply during peak season</li>
+          <li>Bereavement: up to 3 paid days for immediate family</li>
+          <li>Check your balance in ADP → Myself → Time Off</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="hr-sec">
+    <h2>Request Time Off</h2>
+    <p class="lead">Use this form to start a request. It routes to your manager and HR for approval.</p>
+    <form class="pto-form" id="ptoForm" novalidate>
+      <div class="form-msg" id="ptoMsg">Request submitted (demo) — your manager and HR have been notified. You'll receive an approval email.</div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="empName">Employee Name</label>
+          <input type="text" id="empName" name="empName" placeholder="Full name" required>
+        </div>
+        <div class="field">
+          <label for="leaveType">Type of Leave</label>
+          <select id="leaveType" name="leaveType" required>
+            <option value="" disabled selected>Select type…</option>
+            <option value="Vacation">Vacation</option>
+            <option value="Sick">Sick</option>
+            <option value="Personal">Personal</option>
+            <option value="Bereavement">Bereavement</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="startDate">Start Date</label>
+          <input type="date" id="startDate" name="startDate" required>
+        </div>
+        <div class="field">
+          <label for="endDate">End Date</label>
+          <input type="date" id="endDate" name="endDate" required>
+        </div>
+        <div class="field full">
+          <label for="notes">Notes (optional)</label>
+          <textarea id="notes" name="notes" placeholder="Anything your manager should know — coverage plans, partial days, etc."></textarea>
+        </div>
+        <div class="field full">
+          <button type="submit" class="btn btn-gold">Submit request</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <p class="hr-note">Internal use only · For help contact HR.</p>
+</div>
+
+<script>
+  // PTO request form — client-side demo only
+  (function () {
+    var form = document.getElementById("ptoForm");
+    var msg = document.getElementById("ptoMsg");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      msg.classList.add("show");
+      form.reset();
+      msg.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  })();
+</script>
+<script>
+  // Same simple passcode gate as the CRM (shared session key)
+  (function () {
+    var PASS = "kodiak2027";
+    if (sessionStorage.getItem("kodiakCrmAuth") === "1") return;
+    var g = document.createElement("div");
+    g.className = "gate";
+    g.innerHTML = '<div class="box"><img src="../assets/img/logo-seal.png" alt="Kodiak">' +
+      '<h2>Employee Portal</h2><p>Internal access only. Enter the team passcode.</p>' +
+      '<div class="err" id="gErr"></div><input id="gIn" type="password" placeholder="Passcode" autocomplete="off">' +
+      '<button class="btn btn-red" id="gBtn" style="width:100%;justify-content:center;">Enter Portal</button></div>';
+    document.body.appendChild(g);
+    document.body.style.overflow = "hidden";
+    var inp = g.querySelector("#gIn"), err = g.querySelector("#gErr");
+    inp.focus();
+    function go(){ if (inp.value.trim()===PASS){ sessionStorage.setItem("kodiakCrmAuth","1"); g.remove(); document.body.style.overflow=""; } else { err.textContent="Incorrect passcode."; inp.value=""; inp.focus(); } }
+    g.querySelector("#gBtn").addEventListener("click", go);
+    inp.addEventListener("keydown", function(e){ if(e.key==="Enter") go(); });
+  })();
+</script>
+</body>
+</html>

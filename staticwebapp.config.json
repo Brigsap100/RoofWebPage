@@ -4,7 +4,7 @@
   },
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/api/*", "/assets/*", "/css/*", "/js/*", "/crm/*", "/hr/*", "*.{png,jpg,jpeg,webp,svg,ico}"]
+    "exclude": ["/api/*", "/data-api/*", "/assets/*", "/css/*", "/js/*", "/crm/*", "/hr/*", "*.{png,jpg,jpeg,webp,svg,ico}"]
   },
   "mimeTypes": {
     ".webp": "image/webp",

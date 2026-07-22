@@ -34,7 +34,13 @@ const QUERIES = {
     SELECT Id AS id, Type AS type, Subject AS subject, Account AS account,
            Owner AS owner, CONVERT(varchar(10), DueDate, 23) AS due,
            CAST(Done AS INT) AS done
-    FROM dbo.Activities ORDER BY Id`
+    FROM dbo.Activities ORDER BY Id`,
+  leads: `
+    SELECT Id AS id, Source AS source, Name AS name, Company AS company,
+           Email AS email, Phone AS phone, Service AS service,
+           Position AS position, Message AS message, Status AS status,
+           CONVERT(varchar(10), CreatedDate, 23) AS createdDate, Owner AS owner
+    FROM dbo.Leads ORDER BY Id DESC`
 };
 
 let pool; // reused across warm invocations

@@ -1,0 +1,236 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads · Kodiak CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/crm.css"><link rel="icon" href="../assets/img/logo-seal.png"></head>
+<body data-page="leads">
+<div class="app"><aside class="sidebar" id="sidebar"></aside><div class="main">
+<header class="topbar"><div style="display:flex;align-items:center;gap:14px;"><button class="menu-toggle" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button><div class="title"><h1>Leads</h1><p>Inbound website leads</p></div></div>
+<div class="tools"><div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input placeholder="Search…"></div><div class="avatar">BN</div></div></header>
+<main class="content" id="content"></main></div></div>
+<script src="js/data.js"></script>
+<script>
+/* build the website-leads inbox */
+KODIAK_CRM.ready.then(function () {
+  var D = window.KODIAK_CRM;
+  var esc = (window.CRM && window.CRM.esc) || function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
+  var TODAY = new Date(); TODAY.setHours(0, 0, 0, 0); // today at local midnight
+
+  // working copy so client-side status changes don't mutate the shared dataset
+  var items = D.leads.map(function (l) { return Object.assign({}, l); });
+
+  function parseDate(d) { return new Date(d + "T00:00:00"); }
+  function fmtDate(d) {
+    return parseDate(d).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+  }
+  function isCareers(l) { return l.source === "careers-application"; }
+
+  var STATUS_BADGE = { "new":"b", "contacted":"y", "converted":"g", "archived":"lost" };
+  var STATUS_LABEL = { "new":"New", "contacted":"Contacted", "converted":"Converted", "archived":"Archived" };
+
+  var ICON = {
+    inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    week:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>',
+    careers:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+    won:'<path d="M20 6L9 17l-5-5"/>'
+  };
+
+  var FILTERS = [
+    { key:"all",       label:"All" },
+    { key:"new",       label:"New" },
+    { key:"contacted", label:"Contacted" },
+    { key:"converted", label:"Converted" },
+    { key:"careers",   label:"Careers" },
+    { key:"archived",  label:"Archived" }
+  ];
+  var filter = "all";
+
+  // week window: last 7 days up to and including today
+  var weekStart = new Date(TODAY); weekStart.setDate(weekStart.getDate() - 7);
+
+  function computeStats() {
+    var newCount = items.filter(function (l) { return l.status === "new"; }).length;
+    var thisWeek = items.filter(function (l) {
+      var d = parseDate(l.createdDate);
+      return d >= weekStart; // no upper bound so leads created today always count
+    }).length;
+    var careers = items.filter(isCareers).length;
+    var converted = items.filter(function (l) { return l.status === "converted"; }).length;
+    return { newCount:newCount, thisWeek:thisWeek, careers:careers, converted:converted };
+  }
+
+  function stat(icon, value, label) {
+    return '<div class="stat"><div class="ic"><svg viewBox="0 0 24 24">' + icon + '</svg></div>' +
+      '<div class="v mono">' + value + '</div><div class="l">' + label + '</div></div>';
+  }
+
+  function renderStats() {
+    var s = computeStats();
+    return '<div class="grid cols-4" id="statRow">' +
+      stat(ICON.inbox, s.newCount, "New Leads") +
+      stat(ICON.week, s.thisWeek, "This Week") +
+      stat(ICON.careers, s.careers, "Careers Applications") +
+      stat(ICON.won, s.converted, "Converted") +
+    '</div>';
+  }
+
+  function sorted() {
+    return items.slice().sort(function (a, b) { return parseDate(b.createdDate) - parseDate(a.createdDate); });
+  }
+
+  function matchesFilter(l) {
+    if (filter === "all") return l.status !== "archived"; // archived only shows under its own pill
+    if (filter === "careers") return isCareers(l);
+    return l.status === filter;
+  }
+
+  function sourceBadge(l) {
+    return isCareers(l)
+      ? '<span class="badge y">Careers</span>'
+      : '<span class="badge b">Website</span>';
+  }
+
+  function rowHtml(l) {
+    var roleCell = isCareers(l) ? esc(l.position) : esc(l.service);
+    var contactCell = '<div>' + esc(l.email) + '</div><div class="sub">' + esc(l.phone) + '</div>';
+    var companyCell = l.company ? esc(l.company) : '<span style="color:var(--muted);">—</span>';
+    return '<tr data-id="' + l.id + '" style="cursor:pointer;">' +
+      '<td class="mono" style="white-space:nowrap;color:var(--text-soft);">' + esc(fmtDate(l.createdDate)) + '</td>' +
+      '<td>' + sourceBadge(l) + '</td>' +
+      '<td><span class="strong">' + esc(l.name) + '</span></td>' +
+      '<td>' + companyCell + '</td>' +
+      '<td>' + roleCell + '</td>' +
+      '<td>' + contactCell + '</td>' +
+      '<td><span class="badge ' + (STATUS_BADGE[l.status] || "b") + '">' + esc(STATUS_LABEL[l.status] || l.status) + '</span></td>' +
+    '</tr>';
+  }
+
+  function renderTableBody() {
+    var rows = sorted().filter(matchesFilter);
+    if (!rows.length) {
+      return '<tr><td colspan="7"><div class="empty">No leads match this filter.</div></td></tr>';
+    }
+    return rows.map(rowHtml).join("");
+  }
+
+  function renderCard() {
+    return '<div class="card">' +
+      '<div class="card-head">' +
+        '<div><h3>Website leads</h3><p>Inbound contact &amp; careers submissions</p></div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;" id="filterPills">' +
+          FILTERS.map(function (f) {
+            return '<span class="pill" data-filter="' + f.key + '" role="button" tabindex="0">' + f.label + '</span>';
+          }).join("") +
+        '</div>' +
+      '</div>' +
+      '<div class="table-wrap"><table class="table"><thead><tr>' +
+        '<th>Received</th><th>Source</th><th>Name</th><th>Company</th><th>Service / Position</th><th>Contact</th><th>Status</th>' +
+      '</tr></thead><tbody id="leadBody">' + renderTableBody() + '</tbody></table></div>' +
+    '</div>';
+  }
+
+  function paintPills() {
+    document.querySelectorAll("#filterPills .pill").forEach(function (p) {
+      var active = p.getAttribute("data-filter") === filter;
+      if (active) {
+        p.style.background = "var(--red)"; p.style.color = "#fff"; p.style.borderColor = "var(--red)";
+      } else {
+        p.style.background = ""; p.style.color = ""; p.style.borderColor = "";
+      }
+    });
+  }
+
+  function refreshStats() {
+    var row = document.getElementById("statRow");
+    if (row) row.outerHTML = renderStats();
+  }
+  function refreshBody() {
+    var body = document.getElementById("leadBody");
+    if (body) body.innerHTML = renderTableBody();
+  }
+
+  // ---- Lead detail drawer -------------------------------------------
+  function line(lbl, val) {
+    return '<div class="field"><label>' + lbl + '</label><div style="color:var(--text);">' + esc(val) + '</div></div>';
+  }
+
+  function openLead(id) {
+    var l = items.find(function (x) { return x.id === id; });
+    if (!l) return;
+    var roleLabel = isCareers(l) ? "Position Applied For" : "Service Requested";
+    var roleVal = (isCareers(l) ? l.position : l.service) || "—";
+    var actions = '';
+    if (l.status !== "converted") {
+      actions += (l.status === "new"
+        ? '<button class="btn ghost" data-act="contacted">Mark contacted</button>' : '');
+      actions += '<button class="btn red" data-act="convert">Convert to opportunity</button>';
+    } else {
+      actions = '<span class="badge g">Converted to opportunity</span>';
+    }
+
+    window.CRM.openDrawer(
+      '<div class="dh"><div><h3>' + esc(l.name) + '</h3>' +
+        '<p style="color:var(--text-soft);font-size:.82rem;">' +
+          (isCareers(l) ? "Careers application" : "Website contact") + ' · ' + esc(fmtDate(l.createdDate)) + '</p></div>' +
+        '<button class="x">&times;</button></div>' +
+      '<div class="db">' +
+        '<div style="display:flex;gap:8px;">' + sourceBadge(l) +
+          '<span class="badge ' + (STATUS_BADGE[l.status] || "b") + '">' + esc(STATUS_LABEL[l.status] || l.status) + '</span></div>' +
+        (l.company ? line("Company", l.company) : "") +
+        line(roleLabel, roleVal) +
+        line("Email", l.email) +
+        line("Phone", l.phone) +
+        line("Assigned Owner", l.owner || "Unassigned") +
+        '<div class="field"><label>Message</label>' +
+          '<div style="color:var(--text);line-height:1.5;">' + esc(l.message) + '</div></div>' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;" id="leadActions">' + actions + '</div>' +
+      '</div>'
+    );
+
+    var box = document.getElementById("leadActions");
+    if (box) box.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      var act = btn.getAttribute("data-act");
+      if (act === "contacted") l.status = "contacted";
+      else if (act === "convert") l.status = "converted";
+      refreshBody(); refreshStats();
+      openLead(id); // re-render drawer to reflect the new status
+    });
+  }
+
+  function render() {
+    var el = document.getElementById("content");
+    el.innerHTML = renderStats() + renderCard();
+    paintPills();
+    wire();
+  }
+
+  function wire() {
+    var body = document.getElementById("leadBody");
+    body.addEventListener("click", function (e) {
+      var tr = e.target.closest("tr[data-id]");
+      if (!tr) return;
+      openLead(Number(tr.getAttribute("data-id")));
+    });
+    var pills = document.getElementById("filterPills");
+    function pick(p) { filter = p.getAttribute("data-filter"); paintPills(); refreshBody(); }
+    pills.addEventListener("click", function (e) {
+      var p = e.target.closest(".pill"); if (p) pick(p);
+    });
+    pills.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      var p = e.target.closest(".pill"); if (!p) return;
+      e.preventDefault(); pick(p);
+    });
+  }
+
+  render();
+  document.querySelector('.topbar .title p').textContent = "Inbound website leads · " + D.source;
+});
+</script>
+<script src="js/app.js"></script>
+</body></html>

@@ -12,6 +12,9 @@
 <script src="js/data.js"></script><script>
 KODIAK_CRM.ready.then(function () {
   var D = window.KODIAK_CRM;
+  var esc = (window.CRM && window.CRM.esc) || function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
   var est = D.estimates;
 
   // ---- Stat metrics --------------------------------------------------
@@ -43,18 +46,18 @@ KODIAK_CRM.ready.then(function () {
 
   function stat(ic, v, l) {
     return '<div class="stat"><div class="ic">' + ic + '</div>' +
-           '<div class="v">' + CRM.esc(v) + '</div>' +
-           '<div class="l">' + CRM.esc(l) + '</div></div>';
+           '<div class="v">' + esc(v) + '</div>' +
+           '<div class="l">' + esc(l) + '</div></div>';
   }
 
   // ---- Table ---------------------------------------------------------
   var rows = est.map(function (e) {
     return '<tr>' +
-      '<td><span class="strong mono">' + CRM.esc(e.number) + '</span></td>' +
-      '<td>' + CRM.esc(e.account) + '</td>' +
-      '<td class="mono">' + CRM.esc(D.fmt(e.amount)) + '</td>' +
-      '<td><span class="' + (badgeClass[e.status] || "badge") + '">' + CRM.esc(e.status) + '</span></td>' +
-      '<td class="sub">' + CRM.esc(e.date) + '</td>' +
+      '<td><span class="strong mono">' + esc(e.number) + '</span></td>' +
+      '<td>' + esc(e.account) + '</td>' +
+      '<td class="mono">' + esc(D.fmt(e.amount)) + '</td>' +
+      '<td><span class="' + (badgeClass[e.status] || "badge") + '">' + esc(e.status) + '</span></td>' +
+      '<td class="sub">' + esc(e.date) + '</td>' +
     '</tr>';
   }).join("");
 
@@ -75,7 +78,7 @@ KODIAK_CRM.ready.then(function () {
 
   // ---- New Estimate drawer -------------------------------------------
   var acctOptions = D.accounts.map(function (a) {
-    return '<option value="' + CRM.esc(a.name) + '">' + CRM.esc(a.name) + '</option>';
+    return '<option value="' + esc(a.name) + '">' + esc(a.name) + '</option>';
   }).join("");
 
   function newEstimateForm() {

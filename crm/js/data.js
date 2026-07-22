@@ -101,6 +101,19 @@ window.KODIAK_CRM = (function () {
     { id:8, type:"Meeting",      subject:"Turner PM sync", account:"Turner Construction", owner:"Sofia Nguyen", due:"2026-07-29", done:false }
   ];
 
+  // ---- Leads (inbound from the public website) -----------------------
+  // Shape matches the shared lead-intake contract (POST /api/lead →
+  // GET /api/rest/leads). website-contact leads carry a `service`;
+  // careers-application leads carry a `position`.
+  const leads = [
+    { id:1, source:"website-contact",     name:"Brenda Cole",   company:"Northgate Retail Group", email:"bcole@example.com",    phone:"916-555-0212", service:"Commercial Re-Roofing",       position:"",                            message:"Two of our strip-mall roofs are ponding badly after the last storm. We need an assessment and a re-roof quote for roughly 85,000 sq ft across three buildings.", status:"new",       createdDate:"2026-07-20", owner:"Marcus Hale" },
+    { id:2, source:"website-contact",     name:"Victor Ramirez",company:"Delta Cold Storage",     email:"vramirez@example.com", phone:"209-555-0188", service:"24/7 Emergency Leak Repair",  position:"",                            message:"Active leak over freezer bay 3 — water is dripping onto stored product. Need emergency service as soon as possible.",                                        status:"contacted", createdDate:"2026-07-19", owner:"Sofia Nguyen" },
+    { id:3, source:"careers-application", name:"Tyler Nguyen",  company:"",                       email:"tnguyen@example.com",  phone:"916-555-0233", service:"",                            position:"Commercial Roofing Foreman", message:"8 years of TPO and PVC single-ply experience, OSHA 30 certified. Looking to lead crews in the Sacramento area.",                                             status:"new",       createdDate:"2026-07-18", owner:"Elena Ortiz" },
+    { id:4, source:"website-contact",     name:"Angela Foster", company:"Foothill School District", email:"afoster@example.com", phone:"916-555-0245", service:"Preventative Maintenance",   position:"",                            message:"Interested in an annual preventative-maintenance program across six campus buildings before the new school year starts.",                                     status:"converted", createdDate:"2026-07-15", owner:"Marcus Hale" },
+    { id:5, source:"careers-application", name:"Marcus Webb",   company:"",                       email:"mwebb@example.com",    phone:"775-555-0261", service:"",                            position:"Commercial Estimator",       message:"5 years of commercial roofing estimating, proficient with EagleView and On-Screen Takeoff. Open to hybrid or on-site in Reno.",                              status:"contacted", createdDate:"2026-07-14", owner:"Elena Ortiz" },
+    { id:6, source:"website-contact",     name:"Priya Menon",   company:"BayFront Tech Center",   email:"pmenon@example.com",   phone:"510-555-0279", service:"Commercial Waterproofing",    position:"",                            message:"The plaza deck above our parking structure is leaking into the lobby. Requesting a waterproofing evaluation and repair estimate.",                            status:"archived",  createdDate:"2026-07-11", owner:"Sofia Nguyen" }
+  ];
+
   // ---- Helpers / derived metrics -------------------------------------
   const fmt = (n) => "$" + Number(n).toLocaleString("en-US");
   const fmtShort = (n) => n>=1e6 ? "$"+(n/1e6).toFixed(1)+"M" : n>=1e3 ? "$"+Math.round(n/1e3)+"K" : "$"+n;
@@ -124,7 +137,21 @@ window.KODIAK_CRM = (function () {
   }
 
   // ---- Live API (Azure SQL via Azure Functions) with fallback --------
-  const API_BASE = "/api/rest";
+  // The Settings page can override these via localStorage:
+  //   kodiakCrmApiBase  → base URL for the REST endpoint (default "/api/rest")
+  //   kodiakCrmDataMode → "auto" (default) | "live" | "demo"
+  const DEFAULT_API_BASE = "/api/rest";
+  function lsGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+  let dataMode = "auto";
+  const savedMode = lsGet("kodiakCrmDataMode");
+  if (savedMode === "auto" || savedMode === "live" || savedMode === "demo") dataMode = savedMode;
+
+  let API_BASE = DEFAULT_API_BASE;
+  const savedBase = lsGet("kodiakCrmApiBase");
+  // Strip whitespace and trailing slashes so "/api/rest/" doesn't become "/api/rest//accounts".
+  if (savedBase && savedBase.trim()) API_BASE = savedBase.trim().replace(/\/+$/, "") || DEFAULT_API_BASE;
+
   async function apiGet(entity) {
     try {
       const ctrl = new AbortController();
@@ -138,28 +165,46 @@ window.KODIAK_CRM = (function () {
   }
 
   // Replace an array's contents in place so existing references stay valid.
-  function swap(arr, rows) { if (Array.isArray(rows) && rows.length) arr.splice(0, arr.length, ...rows); }
+  // Live rows win when the call returned an array (even empty); a failed
+  // call (null) clears the demo rows — live data must never mix with demo.
+  function swap(arr, rows) {
+    if (Array.isArray(rows)) arr.splice(0, arr.length, ...rows);
+    else arr.length = 0;
+  }
+  function emptyAll() {
+    [accounts, opportunities, projects, estimates, activities, leads]
+      .forEach((arr) => { arr.length = 0; });
+  }
 
-  let dataSource = "local demo data";
+  let dataSource = "Demo data (local)";
   // `ready` resolves once live data has been loaded (or the fallback kept).
   const ready = (async () => {
-    const [acc, opp, prj, est, act] = await Promise.all([
+    if (dataMode === "demo") {                 // forced offline: never call the API
+      dataSource = "Demo data (forced)";
+      return dataSource;
+    }
+    const [acc, opp, prj, est, act, lds] = await Promise.all([
       apiGet("accounts"), apiGet("opportunities"), apiGet("projects"),
-      apiGet("estimates"), apiGet("activities")
+      apiGet("estimates"), apiGet("activities"), apiGet("leads")
     ]);
     if (acc && opp) {
       swap(accounts, acc); swap(opportunities, opp);
       swap(projects, prj); swap(estimates, est); swap(activities, act);
+      swap(leads, lds);
       dataSource = "Azure SQL (live)";
+    } else if (dataMode === "live") {          // live only: never show demo rows
+      emptyAll();
+      dataSource = "Live mode — backend unreachable";
     }
     return dataSource;
   })();
 
   return {
     STAGES, SERVICES, SYSTEMS, reps,
-    accounts, opportunities, projects, estimates, activities,
+    accounts, opportunities, projects, estimates, activities, leads,
     fmt, fmtShort, metrics, byStage, apiGet, API_BASE, ready,
     get source() { return dataSource; },
+    get dataMode() { return dataMode; },
     account: (id) => accounts.find(a=>a.id===id)
   };
 })();

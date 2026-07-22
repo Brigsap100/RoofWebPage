@@ -1,8 +1,9 @@
 /* ============================================================
    Kodiak CRM — Azure SQL Database schema + seed data
-   Generated from crm/js/data.js (demo dataset)
+   Generated from crm/js/data.js (demo dataset); Leads seeds are
+   independent samples (runtime rows come from POST /api/lead).
    Row counts: Accounts 12, Opportunities 20, Projects 5,
-               Estimates 7, Activities 8
+               Estimates 7, Activities 8, Leads 4
    ============================================================ */
 
 -- ---- Drop children before parents -------------------------------------
@@ -11,6 +12,7 @@ DROP TABLE IF EXISTS dbo.Activities;
 DROP TABLE IF EXISTS dbo.Projects;
 DROP TABLE IF EXISTS dbo.Opportunities;
 DROP TABLE IF EXISTS dbo.Accounts;
+DROP TABLE IF EXISTS dbo.Leads;   -- no FK dependents; order flexible
 GO
 
 -- ---- Create parents before children ------------------------------------
@@ -77,6 +79,24 @@ CREATE TABLE dbo.Activities (
     Owner   NVARCHAR(100),
     DueDate DATE,
     Done    BIT
+);
+GO
+
+-- Leads are inserted at runtime (website forms), so Id is IDENTITY here
+-- rather than a fixed value like the other tables.
+CREATE TABLE dbo.Leads (
+    Id          INT            IDENTITY(1,1) PRIMARY KEY,
+    Source      NVARCHAR(40),
+    Name        NVARCHAR(200),
+    Company     NVARCHAR(200),
+    Email       NVARCHAR(200),
+    Phone       NVARCHAR(30),
+    Service     NVARCHAR(120),
+    Position    NVARCHAR(120),
+    Message     NVARCHAR(MAX),
+    Status      NVARCHAR(20)   NOT NULL DEFAULT 'new',
+    CreatedDate DATE           NOT NULL DEFAULT CAST(SYSUTCDATETIME() AS DATE),
+    Owner       NVARCHAR(100)  NULL
 );
 GO
 
@@ -153,4 +173,14 @@ INSERT INTO dbo.Activities (Id, Type, Subject, Account, Owner, DueDate, Done) VA
  (6, N'Call',       N'Reno logistics intro call',   N'Reno Logistics Park',         N'Elena Ortiz',  '2026-07-25', 0),
  (7, N'Email',      N'Estimate revision — Sierra',  N'Sierra Medical Plaza',        N'Elena Ortiz',  '2026-07-26', 0),
  (8, N'Meeting',    N'Turner PM sync',              N'Turner Construction',         N'Sofia Nguyen', '2026-07-29', 0);
+GO
+
+-- ---- Seed: Leads (4 rows) --------------------------------------------------
+-- Id is IDENTITY, so it is omitted and assigned automatically. Status and
+-- CreatedDate are given explicitly here to vary the seed data.
+INSERT INTO dbo.Leads (Source, Name, Company, Email, Phone, Service, Position, Message, Status, CreatedDate, Owner) VALUES
+ (N'website-contact',     N'Grace Holloway', N'Northgate Retail Group', N'gholloway@example.com', N'916-555-0231', N'Commercial Re-Roofing',      NULL,                  N'Two of our warehouse roofs are leaking after the last storm — need an inspection ASAP.', N'new',       '2026-07-03', NULL),
+ (N'website-contact',     N'Victor Nunez',   N'Delta Property Partners', N'vnunez@example.com',   N'209-555-0288', N'Preventative Maintenance',   NULL,                  N'Looking for an annual maintenance program across a 6-building portfolio.',               N'contacted', '2026-07-09', N'Marcus Hale'),
+ (N'careers-application', N'Priya Deshpande', NULL,                     N'pdeshpande@example.com', N'775-555-0142', NULL,                          N'Estimator',          N'8 years estimating commercial TPO and PVC systems. Resume attached via portal.',         N'new',       '2026-07-14', NULL),
+ (N'careers-application', N'Marcus Bell',     NULL,                     N'mbell@example.com',      N'510-555-0119', NULL,                          N'Roofing Foreman',    N'Journeyman foreman, 12 years single-ply and metal. Available to start immediately.',     N'contacted', '2026-07-19', N'Elena Ortiz');
 GO

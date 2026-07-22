@@ -48,14 +48,74 @@
     counters.forEach(function (el) { cio.observe(el); });
   }
 
-  // Contact form (demo — no backend)
-  var form = document.getElementById('quoteForm');
-  if (form) {
+  // Lead intake — POST submissions to the CRM, then always show the
+  // confirmation note (never block the user, even if the request fails).
+  function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+
+  function submitLead(payload) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 4000);
+    return fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    }).finally(function () { clearTimeout(timer); });
+  }
+
+  function wireLeadForm(formId, noteId, buildPayload) {
+    var form = document.getElementById(formId);
+    if (!form) return;
+    var inFlight = false;
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
-      var note = document.getElementById('formNote');
-      if (note) note.style.display = 'block';
-      form.reset();
+      if (inFlight) return; // ignore double submits (e.g. a second Enter press)
+      inFlight = true;
+      var btn = form.querySelector('[type="submit"]');
+      if (btn) btn.disabled = true;
+      var settle = function () {
+        inFlight = false;
+        if (btn) btn.disabled = false;
+      };
+      var done = function () {
+        var note = document.getElementById(noteId);
+        if (note) note.style.display = 'block';
+        form.reset();
+      };
+      try {
+        submitLead(buildPayload()).then(done, done).finally(settle);
+      } catch (e) {
+        done();
+        settle();
+      }
     });
   }
+
+  // Contact form → CRM lead intake
+  wireLeadForm('quoteForm', 'formNote', function () {
+    return {
+      source: 'website-contact',
+      name: val('name'),
+      company: val('company'),
+      email: val('email'),
+      phone: val('phone'),
+      service: val('service'),
+      position: '',
+      message: val('message')
+    };
+  });
+
+  // Careers application → CRM lead intake
+  wireLeadForm('careersForm', 'careersNote', function () {
+    return {
+      source: 'careers-application',
+      name: val('name'),
+      company: '',
+      email: val('email'),
+      phone: val('phone'),
+      service: '',
+      position: val('position'),
+      message: val('message')
+    };
+  });
 })();
