@@ -5,9 +5,11 @@
      addPhoto(target, kind)            -> Promise<photoRecord|null>
      listPhotos(target)                -> Promise<photoRecord[]>
      deletePhoto(id)                   -> Promise<void>
+     movePhoto(id, target)             -> Promise<void>
      saveNote(target, text)            -> Promise<noteRecord>
      listNotes(target)                 -> Promise<noteRecord[]>
      deleteNote(id)                    -> Promise<void>
+     moveNote(id, target)              -> Promise<void>
      startDictation(onText, onState, target?) -> {mode, stop()}
      supported = { speech, recorder, secure }
    `target` is a string key like "wo:104", "est:3" or "site:general".
@@ -63,6 +65,26 @@ window.CAPTURE = (function () {
         var req = idx.getAll(String(target));
         req.onsuccess = function () { resolve(req.result || []); };
         req.onerror = function () { reject(req.error); };
+      });
+    });
+  }
+
+  // Re-point an existing record at a different target ("wo:104", "job:3"…).
+  function storeMove(storeName, id, target) {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(storeName, "readwrite");
+        var store = tx.objectStore(storeName);
+        var req = store.get(Number(id));
+        req.onsuccess = function () {
+          var rec = req.result;
+          if (!rec) { reject(new Error("record not found")); return; }
+          rec.target = String(target);
+          store.put(rec);
+        };
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror = function () { reject(tx.error); };
+        tx.onabort = function () { reject(tx.error || new Error("transaction aborted")); };
       });
     });
   }
@@ -153,6 +175,7 @@ window.CAPTURE = (function () {
 
   function listPhotos(target) { return storeList("photos", target); }
   function deletePhoto(id) { return storeDelete("photos", id); }
+  function movePhoto(id, target) { return storeMove("photos", id, target); }
 
   // ---- Notes -----------------------------------------------------------
   function saveNote(target, text) {
@@ -173,6 +196,7 @@ window.CAPTURE = (function () {
   }
   function listNotes(target) { return storeList("notes", target); }
   function deleteNote(id) { return storeDelete("notes", id); }
+  function moveNote(id, target) { return storeMove("notes", id, target); }
 
   // ---- Dictation -------------------------------------------------------
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -285,9 +309,11 @@ window.CAPTURE = (function () {
     addPhoto: addPhoto,
     listPhotos: listPhotos,
     deletePhoto: deletePhoto,
+    movePhoto: movePhoto,
     saveNote: saveNote,
     listNotes: listNotes,
     deleteNote: deleteNote,
+    moveNote: moveNote,
     startDictation: startDictation,
     supported: {
       speech: !!SR,

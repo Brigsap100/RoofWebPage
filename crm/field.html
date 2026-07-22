@@ -61,7 +61,18 @@
 .fm-warn h3{color:var(--warn);font-size:.98rem;margin-bottom:4px;}
 .fm-warn p{color:var(--text-soft);font-size:.85rem;line-height:1.5;}
 .fm-hint{color:var(--text-soft);font-size:.82rem;text-align:center;}
-@media(min-width:640px){ .fm-grid{grid-template-columns:repeat(4,1fr);} }
+.fm-tie{background:none;border:none;color:var(--gold-2);cursor:pointer;font-size:.95rem;line-height:1;
+  padding:8px;min-width:36px;min-height:36px;border-radius:8px;flex:none;}
+.fm-tie:hover{color:var(--gold);background:var(--bg-2);}
+.fm-chooser{position:fixed;inset:0;z-index:960;background:rgba(0,0,0,.78);display:flex;
+  align-items:flex-end;justify-content:center;}
+.fm-chooser .fm-sheet{background:var(--bg-2);border:1px solid var(--line);border-radius:16px 16px 0 0;
+  width:100%;max-width:640px;max-height:78vh;overflow-y:auto;padding:18px;display:flex;
+  flex-direction:column;gap:10px;}
+.fm-sheet h3{font-family:var(--serif);font-size:1.05rem;color:#fff;margin:0 0 4px;}
+.fm-sheet .fm-wo{min-height:56px;padding:12px 16px;}
+@media(min-width:640px){ .fm-grid{grid-template-columns:repeat(4,1fr);}
+  .fm-chooser{align-items:center;} .fm-chooser .fm-sheet{border-radius:16px;} }
 </style></head>
 <body data-page="field">
 <div class="app"><aside class="sidebar" id="sidebar"></aside><div class="main">
@@ -365,6 +376,57 @@ KODIAK_CRM.ready.then(function () {
     refreshPhotos();
   }
 
+  // ---- Tie-to chooser: pick a WO or job to re-assign a capture ----------
+  function tieChooser(onPick) {
+    var wos = openWOs();
+    var jobs = activeJobs();
+    var ov = document.createElement("div");
+    ov.className = "fm-chooser";
+    ov.innerHTML =
+      '<div class="fm-sheet">' +
+        '<h3>Tie to&hellip;</h3>' +
+        (wos.length ? '<div class="fm-hint" style="text-align:left;">Work orders</div>' +
+          wos.map(function (w) {
+            return '<button class="fm-wo" data-pick="wo:' + esc(String(w.id)) + '">' +
+              '<span class="fm-top"><span class="fm-num mono">' + esc(w.number) + '</span>' +
+                '<span class="badge ' + (PRIO_BADGE[w.priority] || "b") + '">' + esc(w.priority || "") + '</span></span>' +
+              '<span class="fm-acct">' + esc(w.account) + '</span></button>';
+          }).join("") : "") +
+        (jobs.length ? '<div class="fm-hint" style="text-align:left;">Jobs</div>' +
+          jobs.map(function (p) {
+            return '<button class="fm-wo" data-pick="job:' + esc(String(p.id)) + '">' +
+              '<span class="fm-top"><span class="fm-num">' + esc(p.name) + '</span>' +
+                '<span class="badge ' + (JOB_BADGE[p.status] || "b") + '">' + esc(p.status || "") + '</span></span>' +
+              '<span class="fm-acct">' + esc(jobAccount(p)) + '</span></button>';
+          }).join("") : "") +
+        '<button class="fm-wo fm-site" data-pick="site:general">' +
+          '<span class="fm-top"><span class="fm-num">General site capture</span>' +
+            '<span class="badge b">Site</span></span></button>' +
+        '<button class="fm-back" data-cancel style="width:100%;">Cancel</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener("click", function (e) {
+      if (e.target === ov || e.target.closest("[data-cancel]")) { ov.remove(); return; }
+      var b = e.target.closest("[data-pick]");
+      if (!b) return;
+      var t = b.getAttribute("data-pick");
+      ov.remove();
+      onPick(t);
+    });
+  }
+
+  function tieLabel(t) {
+    if (t.indexOf("wo:") === 0) {
+      var w = (D.workOrders || []).find(function (x) { return String(x.id) === t.slice(3); });
+      return w ? w.number : "work order";
+    }
+    if (t.indexOf("job:") === 0) {
+      var p = (D.projects || []).find(function (x) { return String(x.id) === t.slice(4); });
+      return p ? p.name : "job";
+    }
+    return "site capture";
+  }
+
   function flash(msg) {
     var el = document.getElementById("fmMsg");
     if (!el) return;
@@ -398,11 +460,24 @@ KODIAK_CRM.ready.then(function () {
         }
         return '<div class="fm-note"><div class="fm-body">' + body +
           '<div class="fm-ts">' + esc(fmtTs(n.createdAt)) + '</div></div>' +
+          '<button class="fm-tie" data-tie-note="' + n.id + '" aria-label="Tie note to a work order or job" title="Tie to WO / job">&#128279;</button>' +
           '<button class="fm-del" data-note="' + n.id + '" aria-label="Delete note">&#10005;</button></div>';
       }).join("");
       box.querySelectorAll("[data-note]").forEach(function (b) {
         b.addEventListener("click", function () {
           CAP.deleteNote(Number(b.getAttribute("data-note"))).then(refreshNotes);
+        });
+      });
+      box.querySelectorAll("[data-tie-note]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var id = Number(b.getAttribute("data-tie-note"));
+          tieChooser(function (t) {
+            if (t === state.target) return;
+            CAP.moveNote(id, t).then(function () {
+              flash("Note tied to " + tieLabel(t) + ".");
+              refreshNotes();
+            }, function () { flash("Could not move note."); });
+          });
         });
       });
     }, function () {
@@ -445,12 +520,23 @@ KODIAK_CRM.ready.then(function () {
       '<img src="' + esc(p.dataUrl) + '" alt="' + esc(p.kind) + ' photo">' +
       '<div class="fm-row">' +
         '<button class="btn ghost" data-close>Close</button>' +
+        '<button class="btn gold" data-tie>&#128279; Tie to&hellip;</button>' +
         '<button class="btn red" data-delete>Delete photo</button>' +
       '</div>';
     document.body.appendChild(ov);
     function close() { ov.remove(); }
     ov.addEventListener("click", function (e) {
       if (e.target === ov || e.target.closest("[data-close]")) close();
+      else if (e.target.closest("[data-tie]")) {
+        close();
+        tieChooser(function (t) {
+          if (t === state.target) return;
+          CAP.movePhoto(p.id, t).then(function () {
+            flash("Photo tied to " + tieLabel(t) + ".");
+            refreshPhotos();
+          }, function () { flash("Could not move photo."); });
+        });
+      }
       else if (e.target.closest("[data-delete]")) {
         CAPTURE.deletePhoto(p.id).then(function () { close(); refreshPhotos(); });
       }
