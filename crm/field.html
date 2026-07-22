@@ -84,7 +84,8 @@ KODIAK_CRM.ready.then(function () {
   var PRIO_RANK = { Emergency:0, High:1 };
 
   var state = { target:null, label:"", sub:"", kind:"before", ctrl:null, listening:false,
-                finalText:"", blobUrls:[] };
+                finalText:"", blobUrls:[], tab:"wo" };
+  var JOB_BADGE = { "In Progress":"y", "Scheduled":"b", "Complete":"g" };
 
   function revokeBlobUrls() {
     state.blobUrls.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} });
@@ -138,25 +139,74 @@ KODIAK_CRM.ready.then(function () {
     '</button>';
   }
 
+  // ---- STEP 1b: job (project) picker -----------------------------------
+  function activeJobs() {
+    var ps = Array.isArray(D.projects) ? D.projects : [];
+    return ps.slice().sort(function (a, b) {
+      var order = { "In Progress":0, "Scheduled":1 };
+      var ra = order[a.status] != null ? order[a.status] : 2;
+      var rb = order[b.status] != null ? order[b.status] : 2;
+      if (ra !== rb) return ra - rb;
+      return (Number(b.id) || 0) - (Number(a.id) || 0);
+    });
+  }
+
+  function jobAccount(p) {
+    var a = D.account && D.account(p.accountId);
+    return a ? a.name : "";
+  }
+
+  function jobCard(p) {
+    var badge = JOB_BADGE[p.status] || "b";
+    var pct = p.pct != null ? p.pct : 0;
+    return '<button class="fm-wo" data-job="' + esc(String(p.id)) + '">' +
+      '<span class="fm-top"><span class="fm-num">' + esc(p.name) + '</span>' +
+        '<span class="badge ' + badge + '">' + esc(p.status || "") + '</span></span>' +
+      '<span class="fm-acct">' + esc(jobAccount(p)) + '</span>' +
+      '<span class="fm-prob">' + esc(p.system || "") + (p.pm ? ' · PM: ' + esc(p.pm) : '') +
+        ' · ' + pct + '% complete</span>' +
+    '</button>';
+  }
+
   function renderPicker() {
     revokeBlobUrls();
     if (state.ctrl) { state.ctrl.stop(); state.ctrl = null; state.listening = false; }
     state.target = null;
-    var wos = openWOs();
-    var list = wos.length
-      ? wos.map(woCard).join("")
-      : '<div class="card"><div class="empty">No open work orders.</div></div>';
+    var isJobs = state.tab === "job";
+    var list;
+    if (isJobs) {
+      var jobs = activeJobs();
+      list = jobs.length
+        ? jobs.map(jobCard).join("")
+        : '<div class="card"><div class="empty">No jobs on the books.</div></div>';
+    } else {
+      var wos = openWOs();
+      list = wos.length
+        ? wos.map(woCard).join("")
+        : '<div class="card"><div class="empty">No open work orders.</div></div>';
+    }
     content.innerHTML =
       '<div class="fm-wrap">' +
         warnCards() +
-        '<h2 class="fm-h">Select a work order</h2>' +
+        '<h2 class="fm-h">What are you working on?</h2>' +
+        '<div class="fm-seg" id="fmTab">' +
+          '<button data-tab="wo"' + (isJobs ? '' : ' class="on"') + '>Work Orders</button>' +
+          '<button data-tab="job"' + (isJobs ? ' class="on"' : '') + '>Jobs</button>' +
+        '</div>' +
         list +
         '<button class="fm-wo fm-site" data-site="1">' +
           '<span class="fm-top"><span class="fm-num">General site capture</span>' +
             '<span class="badge b">Site</span></span>' +
-          '<span class="fm-prob">Photos &amp; notes not tied to a work order</span>' +
+          '<span class="fm-prob">Photos &amp; notes not tied to a work order or job</span>' +
         '</button>' +
       '</div>';
+    var tab = document.getElementById("fmTab");
+    tab.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-tab]");
+      if (!b) return;
+      state.tab = b.getAttribute("data-tab");
+      renderPicker();
+    });
     content.querySelectorAll("[data-wo]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-wo");
@@ -165,6 +215,17 @@ KODIAK_CRM.ready.then(function () {
         state.target = "wo:" + id;
         state.label = w.number;
         state.sub = w.account;
+        renderCapture();
+      });
+    });
+    content.querySelectorAll("[data-job]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-job");
+        var p = activeJobs().find(function (x) { return String(x.id) === id; });
+        if (!p) return;
+        state.target = "job:" + id;
+        state.label = p.name;
+        state.sub = jobAccount(p) || "Job";
         renderCapture();
       });
     });
