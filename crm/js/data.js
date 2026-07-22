@@ -176,11 +176,37 @@ window.KODIAK_CRM = (function () {
       .forEach((arr) => { arr.length = 0; });
   }
 
+  // ---- Account-owner overrides (edited on the Accounts page) ---------
+  // Stored in localStorage as { accountId: "Name" } so owner edits
+  // survive reloads and also apply on top of live API rows.
+  const OWNER_OVERRIDES_KEY = "kodiakCrmOwnerOverrides";
+  function ownerOverrides() {
+    try { return JSON.parse(lsGet(OWNER_OVERRIDES_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function applyOwnerOverrides() {
+    const ov = ownerOverrides();
+    accounts.forEach((a) => {
+      const name = ov[a.id];
+      if (typeof name === "string" && name.trim()) a.owner = name.trim();
+    });
+  }
+  function setAccountOwner(id, name) {
+    const a = accounts.find((x) => x.id === id);
+    if (!a || !name || !String(name).trim()) return null;
+    a.owner = String(name).trim();
+    const ov = ownerOverrides();
+    ov[id] = a.owner;
+    try { localStorage.setItem(OWNER_OVERRIDES_KEY, JSON.stringify(ov)); } catch (e) {}
+    return a;
+  }
+
   let dataSource = "Demo data (local)";
   // `ready` resolves once live data has been loaded (or the fallback kept).
   const ready = (async () => {
     if (dataMode === "demo") {                 // forced offline: never call the API
       dataSource = "Demo data (forced)";
+      applyOwnerOverrides();
       return dataSource;
     }
     const [acc, opp, prj, est, act, lds] = await Promise.all([
@@ -196,13 +222,14 @@ window.KODIAK_CRM = (function () {
       emptyAll();
       dataSource = "Live mode — backend unreachable";
     }
+    applyOwnerOverrides();                     // owner edits win over demo & live rows
     return dataSource;
   })();
 
   return {
     STAGES, SERVICES, SYSTEMS, reps,
     accounts, opportunities, projects, estimates, activities, leads,
-    fmt, fmtShort, metrics, byStage, apiGet, API_BASE, ready,
+    fmt, fmtShort, metrics, byStage, apiGet, API_BASE, ready, setAccountOwner,
     get source() { return dataSource; },
     get dataMode() { return dataMode; },
     account: (id) => accounts.find(a=>a.id===id)

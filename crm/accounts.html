@@ -18,6 +18,17 @@ KODIAK_CRM.ready.then(function () {
       return { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]; }); };
   var TYPES = ["Owner", "General Contractor", "Property Manager"];
 
+  // Owner cell markup — pencil hint signals the owner is editable (row click opens the drawer).
+  function ownerCell(a) {
+    return esc(a.owner) +
+      ' <span class="sub" style="white-space:nowrap;" title="Edit owner">&#9998; edit</span>';
+  }
+  function refreshOwnerCell(a) {
+    var tr = document.querySelector('#acctRows tr[data-id="' + a.id + '"]');
+    var td = tr && tr.querySelector(".owner-cell");
+    if (td) td.innerHTML = ownerCell(a);
+  }
+
   // ---- Build the main card + table ----------------------------------
   function render() {
     var rows = D.accounts.map(function (a) {
@@ -29,7 +40,7 @@ KODIAK_CRM.ready.then(function () {
         '<td>' + esc(a.city) + ', ' + esc(a.state) + '</td>' +
         '<td>' + esc(a.phone) + '</td>' +
         '<td>' + esc(a.email) + '</td>' +
-        '<td>' + esc(a.owner) + '</td>' +
+        '<td class="owner-cell">' + ownerCell(a) + '</td>' +
       '</tr>';
     }).join("");
 
@@ -91,6 +102,15 @@ KODIAK_CRM.ready.then(function () {
       return '<div class="field"><label>' + lbl + '</label><div style="color:var(--text);">' + esc(val) + '</div></div>';
     }
 
+    // Owner select = reps + any custom names already in use + "Custom…" (reveals a text input).
+    var ownerNames = D.reps.slice();
+    D.accounts.forEach(function (x) {
+      if (x.owner && ownerNames.indexOf(x.owner) === -1) ownerNames.push(x.owner);
+    });
+    var ownerOpts = ownerNames.map(function (n) {
+      return '<option' + (n === a.owner ? ' selected' : '') + '>' + esc(n) + '</option>';
+    }).join("") + '<option value="__custom__">Custom…</option>';
+
     CRM.openDrawer(
       '<div class="dh"><div><h3>' + esc(a.name) + '</h3>' +
         '<p style="color:var(--text-soft);font-size:.82rem;">' + esc(a.type) + '</p></div>' +
@@ -100,12 +120,34 @@ KODIAK_CRM.ready.then(function () {
         line("Location", a.city + ', ' + a.state) +
         line("Phone", a.phone) +
         line("Email", a.email) +
-        line("Account Owner", a.owner) +
+        '<div class="field"><label>Account Owner</label>' +
+          '<select id="ownerSelect">' + ownerOpts + '</select>' +
+          '<input id="ownerCustom" placeholder="Custom owner name" style="display:none;margin-top:8px;">' +
+        '</div>' +
+        '<button class="btn ghost" id="saveOwner" style="justify-content:center;">Save Owner</button>' +
+        '<div id="ownerMsg" style="display:none;color:var(--gold-2);font-size:.82rem;text-align:center;margin-top:8px;">Owner updated &#10003;</div>' +
         '<div class="section-title" style="margin-top:8px;"><h3 style="font-size:1rem;">Opportunities</h3>' +
           '<span class="pill">' + opps.length + '</span></div>' +
         '<div>' + oppRows + '</div>' +
       '</div>'
     );
+
+    var sel = document.getElementById("ownerSelect");
+    var custom = document.getElementById("ownerCustom");
+    sel.addEventListener("change", function () {
+      var isCustom = sel.value === "__custom__";
+      custom.style.display = isCustom ? "" : "none";
+      if (isCustom) custom.focus();
+    });
+    document.getElementById("saveOwner").addEventListener("click", function () {
+      var name = sel.value === "__custom__" ? custom.value.trim() : sel.value;
+      if (!name) { custom.focus(); return; }
+      D.setAccountOwner(a.id, name);
+      refreshOwnerCell(a);
+      var msg = document.getElementById("ownerMsg");
+      msg.style.display = "";
+      setTimeout(function () { if (msg.isConnected) msg.style.display = "none"; }, 2000);
+    });
   }
 
   // ---- Topbar search -------------------------------------------------

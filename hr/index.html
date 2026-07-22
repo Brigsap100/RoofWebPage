@@ -27,6 +27,9 @@
   .hr-note{margin-top:40px;text-align:center;color:var(--muted,#726356);font-size:.85rem;}
   @media(max-width:860px){.hr-grid{grid-template-columns:1fr 1fr;}}
   @media(max-width:560px){.hr-grid{grid-template-columns:1fr;}}
+  /* mobile-safe back link (nav.main is hidden off-canvas on phones) */
+  .back-pill{display:inline-flex;align-items:center;gap:6px;background:#1a1413;border:1px solid rgba(255,255,255,.09);border-radius:30px;padding:8px 16px;color:#e7ddd0;font-size:.85rem;font-weight:500;margin-bottom:26px;transition:.2s;}
+  .back-pill:hover{color:var(--gold-2);border-color:var(--gold);}
   /* passcode gate (reuses CRM look) */
   .gate{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 40%,#1d1615,#0b0908);display:flex;align-items:center;justify-content:center;}
   .gate .box{background:#1a1413;border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:40px;width:min(400px,90vw);text-align:center;}
@@ -51,6 +54,7 @@
 </header>
 
 <div class="hr-wrap">
+  <a class="back-pill" href="../index.html">&larr; Back to website</a>
   <div class="hr-head">
     <img src="../assets/img/logo-seal.png" alt="Kodiak 35th Anniversary seal">
     <div class="eyebrow red">Employee Portal</div>
