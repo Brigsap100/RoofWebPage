@@ -110,7 +110,27 @@
     };
   });
 
-  // Careers application → CRM lead intake
+  // Careers application → CRM lead intake.
+  // Payload keys are a fixed contract with the API/CRM — do not change them.
+  // Screening answers are folded into `message` as labeled lines.
+  function checkedVals(name) {
+    var boxes = document.querySelectorAll('input[name="' + name + '"]:checked');
+    return Array.prototype.map.call(boxes, function (b) { return b.value; });
+  }
+
+  function careersMessage(prefix, ids, certsName) {
+    var parts = [
+      'Experience: ' + val(ids.experience),
+      'Authorized to work: ' + val(ids.authorized),
+      '18+: ' + val(ids.adult),
+      "Driver's license: " + val(ids.license)
+    ];
+    var certs = checkedVals(certsName);
+    if (certs.length) parts.push('Certs: ' + certs.join(', '));
+    parts.push('Languages: ' + val(ids.languages));
+    return prefix + parts.join(' | ') + '\n\n' + val(ids.message);
+  }
+
   wireLeadForm('careersForm', 'careersNote', function () {
     return {
       source: 'careers-application',
@@ -120,8 +140,58 @@
       phone: val('phone'),
       service: '',
       position: val('position'),
-      message: val('message')
+      message: careersMessage('', {
+        experience: 'experience',
+        authorized: 'authorized',
+        adult: 'adult',
+        license: 'license',
+        languages: 'languages',
+        message: 'message'
+      }, 'certs')
     };
+  });
+
+  // Spanish careers application → same CRM payload shape; the "[ES] "
+  // message prefix tells recruiters the applicant used the Spanish page.
+  // Select option values are English on both pages.
+  wireLeadForm('careersFormEs', 'careersNoteEs', function () {
+    return {
+      source: 'careers-application',
+      name: val('es-name'),
+      company: '',
+      email: val('es-email'),
+      phone: val('es-phone'),
+      service: '',
+      position: val('es-position'),
+      message: careersMessage('[ES] ', {
+        experience: 'es-experience',
+        authorized: 'es-authorized',
+        adult: 'es-adult',
+        license: 'es-license',
+        languages: 'es-languages',
+        message: 'es-message'
+      }, 'es-certs')
+    };
+  });
+
+  // Apply-button preselect (careers pages, progressive enhancement):
+  // clicking an <a href="#apply" data-position="..."> sets the position
+  // select before the anchor scroll. No preventDefault — the scroll and
+  // the no-JS fallback (plain anchor link) keep working.
+  document.addEventListener('click', function (ev) {
+    if (!ev.target || !ev.target.closest) return;
+    var trigger = ev.target.closest('[data-position]');
+    if (!trigger) return;
+    var position = trigger.getAttribute('data-position');
+    var select = document.getElementById('position') ||
+      document.getElementById('es-position');
+    if (!select || !select.options) return;
+    for (var i = 0; i < select.options.length; i++) {
+      if (select.options[i].value === position) {
+        select.value = position;
+        return;
+      }
+    }
   });
 
   // Service request form (service pages) → dispatch intake.
