@@ -30,7 +30,7 @@ There are no tests. Verification = `node --check` + tag-balance + browsing the s
 ## Hosting reality (important)
 
 Deployed two ways from the same repo:
-- **GitHub Pages** (live at brigsap100.github.io/kodiak-webpage; the older brigsap100.github.io/RoofWebPage mirror also serves this code) — static only; `/api/*` does not exist there. All form POSTs and CRM live-data fetches fail silently by design. This repo pushes to two remotes: `origin` (RoofWebPage) and `kodiak` (kodiak-webpage) — push both to keep the sites in sync.
+- **GitHub Pages** (live at brigsap100.github.io/kodiak-webpage) — static only; `/api/*` does not exist there. All form POSTs and CRM live-data fetches fail silently by design. `origin` is kodiak-webpage (the primary repo); the legacy `roofwebpage` remote (github.com/Brigsap100/RoofWebPage) still serves the old URL — push it too if you want the mirror kept in sync.
 - **Azure Static Web Apps** (`staticwebapp.config.json`, `apiRuntime: node:20`) — serves `api/` functions backed by Azure SQL via env var `DATABASE_CONNECTION_STRING`; schema in `db/schema-seed.sql`.
 
 Every network call must therefore degrade gracefully (short timeout, always show the user a friendly result). This pattern is already implemented everywhere — copy it, don't weaken it.
