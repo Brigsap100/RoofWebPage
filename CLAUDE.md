@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Marketing website + internal tools for Kodiak Roofing & Waterproofing (commercial roofing, CA/NV). Plain static HTML/CSS/JS — **no framework, no build step, no package.json at the root, no generator**. Three apps live side by side:
 
 - **Public site** (root `*.html`) — marketing pages, careers (`careers.html` + Spanish mirror `careers-es.html`), lead/service-request forms
-- **CRM** (`crm/`) — passcode-gated sales + service department app (dashboard, leads, pipeline, accounts, projects, service, workorders, field, roofassets, contracts, estimates, activities, settings)
+- **CRM** — moved to its own repo: [Brigsap100/CRMApp](https://github.com/Brigsap100/CRMApp) (live at brigsap100.github.io/CRMApp). This repo's CRM links point there. The CRM architecture notes below describe CRMApp's code, kept here because the `api/`+`db/` backend still lives in BOTH repos and shares the same data contracts.
 - **HR portal** (`hr/`) — passcode-gated employee pages (benefits, payroll, pto, policies, directory), all `noindex`
 - **Backend** (`api/` + `db/`) — Azure Functions (Node 20, `mssql`) + Azure SQL schema/seed. Only used on Azure Static Web Apps; see Hosting below.
 
@@ -20,7 +20,7 @@ Marketing website + internal tools for Kodiak Roofing & Waterproofing (commercia
 python3 -m http.server 4173 --bind 127.0.0.1
 
 # Syntax-check any changed JS (no linter/test suite exists)
-node --check js/site.js crm/js/data.js crm/js/app.js crm/js/capture.js api/rest/index.js
+node --check js/site.js api/rest/index.js api/lead/index.js api/service-request/index.js
 
 # Check an inline <script> in an HTML page: extract it to a temp file, then node --check it
 ```
@@ -45,7 +45,7 @@ Design system in `css/site.css`: dark red/gold/cream theme via CSS vars (`--red 
 
 ## CRM architecture
 
-Each `crm/*.html` page is standalone with the same skeleton, in this exact script order:
+Each CRM page (in the CRMApp repo) is standalone with the same skeleton, in this exact script order:
 
 ```html
 <body data-page="KEY">      <!-- KEY must match a NAV entry in crm/js/app.js -->
